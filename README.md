@@ -1,1 +1,1 @@
-# rotating_proxy
+# lightweight_tor
