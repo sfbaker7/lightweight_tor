@@ -1,7 +1,8 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 
 import sys
 import socket
+import json
 import base64
 
 def main():
@@ -19,6 +20,17 @@ def listen():
         clientsocket.close()
 
     return
+
+def get_pk(): #DELETE LATER, private key lookup from directory
+    directory_socket = socket.socket()
+    directory_socket.connect(('localhost', 3000))
+    payload = directory_socket.recv(8192).decode('utf-8')  # payload is received as buffer, decode to get str type
+    directory_socket.close()
+    relay_nodes = json.loads(payload)
+    print(relay_nodes['localhost'][1])
+    return relay_nodes['localhost'][1]
+
+PRIVATE_KEY = get_pk()
 
 def deserialize_payload(payload):
     encrypted_key, encrypted_message = str(base64.b64decode(payload)).split('###')
