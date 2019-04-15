@@ -9,7 +9,7 @@ from random import shuffle
 
 DIRECTORY_PORT = 3000
 DIRECTORY_IP = 'localhost'
-AES_KEY = crypto.gen_aes_key() 
+AES_KEY = crypto.gen_aes_key()
 
 def main(message):
     relay_nodes = request_directory()
@@ -73,8 +73,12 @@ def send_request(encrypted_message):
     """
     send request to first relay node
     """
-
-    return ''
+    relay_socket = socket.socket()
+    relay_socket.connect(('localhost', 5000))
+    payload = encrypted_message.encode('utf-8')
+    relay_socket.send(payload)
+    relay_socket.close()
+    return
 
 def encrypt(public_key, payload):
     return crypto.encrypt(AES_KEY, public_key, payload)
