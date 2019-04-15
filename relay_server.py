@@ -24,10 +24,10 @@ def listen():
 def get_pk(): #DELETE LATER, private key lookup from directory
     directory_socket = socket.socket()
     directory_socket.connect(('localhost', 3000))
-    payload = directory_socket.recv(4096).decode('utf-8')  # payload is received as buffer, decode to get str type
+    payload = directory_socket.recv(8192).decode('utf-8')  # payload is received as buffer, decode to get str type
     directory_socket.close()
     relay_nodes = json.loads(payload)
-    print(relay_nodes)
+    print(relay_nodes['localhost'][1])
     return relay_nodes['localhost'][1]
 
 PRIVATE_KEY = get_pk()
