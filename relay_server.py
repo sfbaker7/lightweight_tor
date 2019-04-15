@@ -1,7 +1,7 @@
 import sys
 import socket
 
-    PRIVATE_KEY = get_pk() #TODO: Change to read from config file later
+    PRIVATE_KEY = get_pk() #TODO: Change to read from config file later, OS.environ
 
 def main():
 
