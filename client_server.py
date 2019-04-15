@@ -20,7 +20,8 @@ def request_directory():
     """
     s = socket.socket()
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
-    payload = s.recv(1024)
+    payload = s.recv(1024).decode()  # payload is received as buffer, decode to get str type
+    print(payload)
     s.close()
     relay_nodes = json.loads(payload)
     return relay_nodes
