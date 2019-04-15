@@ -13,11 +13,8 @@ AES_KEY = crypto.gen_aes_key()
 
 def main(message):
     relay_nodes = request_directory()
-    print(relay_nodes)
     circuit = generate_circuit(relay_nodes)
-    print(circuit)
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
-    print(encrypted_message)
     send_request(encrypted_message)
 
 def request_directory():
@@ -50,23 +47,15 @@ def encrypt_payload(message, circuit, relay_nodes):
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
         public_key = relay_nodes[curr_node_addr]
-        print('public key', public_key)
-        print('node', curr_node_addr)
+        # print('public key', public_key)
+        # print('node', curr_node_addr)
 
         if (isinstance(payload, tuple)):
           encrypted_key, encrypted_message = payload
-          print(len(encrypted_key), encrypted_key)
+          payload = base64.b64encode(encrypted_message + b'###' + encrypted_key).decode('utf-8')
 
-          padding = crypto.pad(encrypted_key.decode())
-          # print('padding', padding, len(padding))
-          key = base64.b64decode(encrypted_key + padding)
-          # print('key', type(key), (key + ('=' * (-len(key) % 4).encode())).decode())
-          msg = encrypted_message
-          print('msg', type(msg), msg)
-          payload = msg + b"###" + key
-          # print(payload)
         payload = encrypt(public_key, (payload + next))
-        next = curr_node_addr.encode('utf-8')
+        next = curr_node_addr
 
     return payload
 
