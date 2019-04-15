@@ -20,7 +20,6 @@ def listen():
     serversocket.listen(5)
     while True:
         clientsocket, address = serversocket.accept()
-        # base64.b64decode
         payload = json.dumps(RELAY_NODES).encode('utf-8') # python3 doesn't allow sending of strings across UDP
         print (payload)
         clientsocket.send(payload)
