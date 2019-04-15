@@ -3,6 +3,7 @@
 import sys
 import socket
 import json
+import crypto
 from random import shuffle
 
 DIRECTORY_PORT = 3000
@@ -39,7 +40,7 @@ def encrypt_payload(message, circuit, relay_nodes):
     encrypt each layer of the request encrypt(encrypt(M + next_node) + next node)
     """
     node_stack = circuit
-    next = message #final plaintext will be the original user request
+    next = message # final plaintext will be the original user request
     payload = ''
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
@@ -63,8 +64,12 @@ def send_request(encrypted_message):
 
     return ''
 
-def encrypt(payload, public_key): #place holder func for now
-    return (payload + public_key)
+def encrypt(public_key, payload):
+    global AES_KEY = crypte.gen_aes_key() 
+    return crypto.encrypt(AES_KEY, public_key, payload)
+
+def decrypt(private_key, payload):
+  return crypto.decrypt(AES_KEY, private_key, payload)
 
 if __name__ == '__main__':
     main("www.google.com")
