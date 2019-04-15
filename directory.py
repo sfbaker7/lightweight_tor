@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
+
 import socket
 import json
+import crypto
 
 #stub values for now
 RELAY_NODES = {
-    '192.0.2.1' : 'priv-key1',
-    '192.0.2.2' : 'priv-key2',
-    '192.0.2.3' : 'priv-key3'
+    '192.0.2.1' : crypto.gen_rsa_key()[0].decode(),
+    '192.0.2.2' : crypto.gen_rsa_key()[0].decode(),
+    '192.0.2.3' : crypto.gen_rsa_key()[0].decode()
 }
 
 def main():
@@ -17,7 +20,8 @@ def listen():
     serversocket.listen(5)
     while True:
         clientsocket, address = serversocket.accept()
-        payload = json.dumps(RELAY_NODES)
+        payload = json.dumps(RELAY_NODES).encode('utf-8') # python3 doesn't allow sending of strings across UDP
+        print (payload)
         clientsocket.send(payload)
         clientsocket.close()
     return
