@@ -67,7 +67,8 @@ def encrypt_rsa(key, msg):
   :rtype: bytes
   :return: the encrypted message
   """
-  public_key =  RSA.importKey(key)
+  print(key, msg)
+  public_key = RSA.importKey(key)
   encrypted_message = public_key.encrypt(msg, 32)[0]
   return encrypted_message
 
@@ -110,4 +111,4 @@ def decrypt(aes_key, rsa_key, msg):
   """
   decrypted_key = decrypt_rsa(rsa_key, aes_key)
   decrypted_message = decrypt_aes(decrypted_key, msg)
-return decrypted_message
+  return decrypted_message

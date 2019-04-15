@@ -9,6 +9,7 @@ from random import shuffle
 
 DIRECTORY_PORT = 3000
 DIRECTORY_IP = 'localhost'
+AES_KEY = crypto.gen_aes_key() 
 
 def main(message):
     relay_nodes = request_directory()
@@ -22,7 +23,7 @@ def request_directory():
     """
     s = socket.socket()
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
-    payload = s.recv(4096).decode('utf-8')  # payload is received as buffer, decode to get str type
+    payload = s.recv(8192).decode('utf-8')  # payload is received as buffer, decode to get str type
     s.close()
     relay_nodes = json.loads(payload)
     return relay_nodes
@@ -48,6 +49,7 @@ def encrypt_payload(message, circuit, relay_nodes):
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
         public_key = relay_nodes[curr_node_addr][0]
+        print('pk', public_key)
         # private_key = relay_nodes[curr_node_addr][1]
 
         if (isinstance(payload, tuple)):
@@ -55,7 +57,6 @@ def encrypt_payload(message, circuit, relay_nodes):
           payload = serialize_payload(encrypted_key, encrypted_message)
 
         payload = encrypt(public_key, (payload + next))
-        payload = serialize_payload(payload)
 
         next = curr_node_addr
 
@@ -80,10 +81,10 @@ def send_request(encrypted_message):
     return
 
 def encrypt(public_key, payload):
-    return crypto.encrypted_message(public_key, payload)
+    return crypto.encrypt(AES_KEY, public_key, payload)
 
 def decrypt(private_key, payload):
-  return crypto.decrypt(private_key, payload)
+  return crypto.decrypt(AES_KEY, private_key, payload)
 
 if __name__ == '__main__':
     main("www.google.com")
