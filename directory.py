@@ -5,9 +5,9 @@ import json
 import crypto
 
 RELAY_NODES = {
-    '192.0.2.1' : crypto.gen_rsa_key()[0].decode(),
-    '192.0.2.2' : crypto.gen_rsa_key()[0].decode(),
-    '192.0.2.3' : crypto.gen_rsa_key()[0].decode()
+    '192.0.2.1' : [crypto.gen_rsa_key()[0].decode(), crypto.gen_rsa_key()[1].decode()],
+    '192.0.2.2' : [crypto.gen_rsa_key()[0].decode(), crypto.gen_rsa_key()[1].decode()],
+    '192.0.2.3' : [crypto.gen_rsa_key()[0].decode(), crypto.gen_rsa_key()[1].decode()]
 }
 
 def main():
@@ -21,10 +21,13 @@ def listen():
         clientsocket, address = serversocket.accept()
         payload = json.dumps(RELAY_NODES).encode('utf-8') # python3 doesn't allow sending of strings across UDP
         print (payload)
-        print '\n'
+        # print('\n')
         clientsocket.send(payload)
         clientsocket.close()
     return
+  
+def get_private_key():
+  return RELAY_NODES
 
 
 if __name__ == '__main__':
