@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import socket
 import json
 
@@ -17,7 +19,9 @@ def listen():
     serversocket.listen(5)
     while True:
         clientsocket, address = serversocket.accept()
-        payload = json.dumps(RELAY_NODES)
+        print (clientsocket, address)
+        payload = json.dumps(RELAY_NODES).encode() # python3 doesn't allow sending of strings across UDP
+        print (payload)
         clientsocket.send(payload)
         clientsocket.close()
     return
