@@ -14,7 +14,6 @@ def listen():
     while True:
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(4096)
-        # print(payload)
         res = deserialize_payload(payload)
 
         clientsocket.close()
@@ -23,7 +22,6 @@ def listen():
 
 def deserialize_payload(payload):
     encrypted_key, encrypted_message = str(base64.b64decode(payload)).split('###')
-    print("HHHHHHH")
     print(encrypted_key)
     print(encrypted_message)
     return encrypted_message

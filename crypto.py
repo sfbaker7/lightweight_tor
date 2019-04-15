@@ -16,7 +16,6 @@ decode_aes = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(PADDING)
 def gen_aes_key():
   """
   Generates an AES key
-
   :rtype: bytes
   :return: base64 encoded AES key
   """
@@ -26,7 +25,6 @@ def gen_aes_key():
 def gen_rsa_key():
   """
   Generates an RSA key
-
   :rtype: tuple
   :return: a tuple with public key as the first value and private key as the second
   """
@@ -38,10 +36,8 @@ def gen_rsa_key():
 def encrypt_aes(key, msg):
   """
   Encrypts message using AES
-
   :param bytes key: AES symmetric private key
   :param str msg: plaintext to be encrypted
-
   :rtype: bytes
   :return: the encrypted message
   """
@@ -53,10 +49,8 @@ def encrypt_aes(key, msg):
 def decrypt_aes(key, msg):
   """
   Decrypts message using AES
-
   :param bytes key: AES symmetric private key
   :param str msg: ciphertext to be decrypted
-
   :rtype: bytes
   :return: the decrypted message
   """ 
@@ -68,10 +62,8 @@ def decrypt_aes(key, msg):
 def encrypt_rsa(key, msg):
   """
   Encrypts using RSA public key
-
   :param bytes key: RSA public key
   :param str msg: message to be encrypted
-
   :rtype: bytes
   :return: the encrypted message
   """
@@ -82,10 +74,8 @@ def encrypt_rsa(key, msg):
 def decrypt_rsa(key, msg):
   """
   Decrypts using RSA private key
-
   :param bytes key: RSA private key
   :param str msg: message to be decrypted
-
   :rtype: bytes
   :return: the decrypted message
   """
@@ -98,11 +88,9 @@ def decrypt_rsa(key, msg):
 def encrypt(aes_key, rsa_key, msg):
   """
   Encrypts using both AES and RSA
-
   :param bytes aes_key: AES symmetric private key
   :param bytes rsa_key: RSA public key
   :param str msg: message to be encrypted
-
   :rtype: tuple
   :return: tuple containing encrypted AES key, then encrypted message
   """
@@ -114,14 +102,12 @@ def encrypt(aes_key, rsa_key, msg):
 def decrypt(aes_key, rsa_key, msg):
   """
   Decrypts using both AES and RSA
-
   :param bytes aes_key: AES symmetric private key
   :param bytes rsa_key: RSA private key
   :param str msg: encrypted message
-
   :rtype: str
   :return: decrypted message
   """
   decrypted_key = decrypt_rsa(rsa_key, aes_key)
   decrypted_message = decrypt_aes(decrypted_key, msg)
-  return decrypted_message
+return decrypted_message
