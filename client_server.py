@@ -10,7 +10,8 @@ DIRECTORY_IP = 'localhost'
 
 def main(message):
     relay_nodes = request_directory()
-    circuit = generate_ciruit(relay_nodes)
+    circuit = generate_circuit(relay_nodes)
+    print(circuit)
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
     send_request(encrypted_message)
 
@@ -21,12 +22,11 @@ def request_directory():
     s = socket.socket()
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
     payload = s.recv(1024).decode()  # payload is received as buffer, decode to get str type
-    print(payload)
     s.close()
     relay_nodes = json.loads(payload)
     return relay_nodes
 
-def generate_ciruit(nodes):
+def generate_circuit(nodes):
     """
     randomly select order of relay nodes
     """
