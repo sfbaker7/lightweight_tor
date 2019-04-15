@@ -20,8 +20,8 @@ def gen_aes_key():
   :rtype: bytes
   :return: base64 encoded AES key
   """
-	secret = os.urandom(BLOCK_SIZE)
-	return base64.b64encode(secret)
+  secret = os.urandom(BLOCK_SIZE)
+  return base64.b64encode(secret)
 
 def gen_rsa_key():
   """
@@ -30,10 +30,10 @@ def gen_rsa_key():
   :rtype: tuple
   :return: a tuple with public key as the first value and private key as the second
   """
-	new_key = RSA.generate(2048, e=65537)
-	public_key = new_key.publickey().exportKey('PEM') 
-	private_key = new_key.exportKey('PEM') 
-	return (public_key, private_key)
+  new_key = RSA.generate(2048, e=65537)
+  public_key = new_key.publickey().exportKey('PEM') 
+  private_key = new_key.exportKey('PEM') 
+  return (public_key, private_key)
 
 def encrypt_aes(key, msg):
   """
@@ -45,9 +45,9 @@ def encrypt_aes(key, msg):
   :rtype: bytes
   :return: the encrypted message
   """
-	cipher = AES.new(base64.b64decode(key))
-	encrypted_message = encode_aes(cipher, msg)
-	return encrypted_message
+  cipher = AES.new(base64.b64decode(key))
+  encrypted_message = encode_aes(cipher, msg)
+  return encrypted_message
 
 
 def decrypt_aes(key, msg):
@@ -60,9 +60,9 @@ def decrypt_aes(key, msg):
   :rtype: bytes
   :return: the decrypted message
   """ 
-	cipher = AES.new(base64.b64decode(key))
-	decrypted_message = decode_aes(cipher, msg)
-	return decrypted_message
+  cipher = AES.new(base64.b64decode(key))
+  decrypted_message = decode_aes(cipher, msg)
+  return decrypted_message
 
 
 def encrypt_rsa(key, msg):
@@ -75,9 +75,9 @@ def encrypt_rsa(key, msg):
   :rtype: bytes
   :return: the encrypted message
   """
-	public_key =  RSA.importKey(key)
-	encrypted_message = public_key.encrypt(msg, 32)[0]
-	return encrypted_message
+  public_key =  RSA.importKey(key)
+  encrypted_message = public_key.encrypt(msg, 32)[0]
+  return encrypted_message
 
 def decrypt_rsa(key, msg):
   """
@@ -89,9 +89,9 @@ def decrypt_rsa(key, msg):
   :rtype: bytes
   :return: the decrypted message
   """
-	private_key = RSA.importKey(key)
-	decrypted_message = private_key.decrypt(msg)
-	return decrypted_message
+  private_key = RSA.importKey(key)
+  decrypted_message = private_key.decrypt(msg)
+  return decrypted_message
 
 
 
@@ -106,9 +106,9 @@ def encrypt(aes_key, rsa_key, msg):
   :rtype: tuple
   :return: tuple containing encrypted AES key, then encrypted message
   """
-	encrypted_message = encrypt_aes(aes_key, msg)
-	encrypted_key = encrypt_rsa(rsa_key, aes_key)
-	return (encrypted_key, encrypted_message)
+  encrypted_message = encrypt_aes(aes_key, msg)
+  encrypted_key = encrypt_rsa(rsa_key, aes_key)
+  return (encrypted_key, encrypted_message)
 
 
 def decrypt(aes_key, rsa_key, msg):
@@ -122,18 +122,6 @@ def decrypt(aes_key, rsa_key, msg):
   :rtype: str
   :return: decrypted message
   """
-	decrypted_key = decrypt_rsa(rsa_key, aes_key)
-	decrypted_message = decrypt_aes(decrypted_key, msg)
-	return decrypted_message
-
-def easy_encrypt(rsa_key, msg):
-  """
-  Encrypts using both AES and RSA after generating the AES key itself
-
-  :param bytes rsa_key: RSA private key
-  :param str msg: encrypted message
-
-  :rtype: tuple
-  :return: tuple containing encrypted AES key, then encrypted message
-  """
-  return encrypt(gen_aes_key(), rsa_key, msg)
+  decrypted_key = decrypt_rsa(rsa_key, aes_key)
+  decrypted_message = decrypt_aes(decrypted_key, msg)
+  return decrypted_message
