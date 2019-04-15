@@ -1,6 +1,8 @@
+#!/usr/bin/env python3 
+
 import sys
 import socket
-
+import base64
 
 def main():
     listen()
@@ -11,15 +13,20 @@ def listen():
     serversocket.listen(5)
     while True:
         clientsocket, address = serversocket.accept()
-        payload = clientsocket.recv(4096).decode('utf-8')
+        payload = clientsocket.recv(4096)
+        # print(payload)
+        res = deserialize_payload(payload)
 
         clientsocket.close()
 
     return
 
 def deserialize_payload(payload):
-    encrypted_message, AES_key = payload.split(b'###')
-    print(encrypted_message, AES_key)
+    encrypted_key, encrypted_message = str(base64.b64decode(payload)).split('###')
+    print("HHHHHHH")
+    print(encrypted_key)
+    print(encrypted_message)
+    return encrypted_message
 
 if __name__ == '__main__':
     main()
