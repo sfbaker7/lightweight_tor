@@ -13,9 +13,7 @@ RELAY_NODES = {
     # '192.0.2.2' : list(crypt.get_pem_format(keypair2[0], keypair2[1])),
     # '192.0.2.3' : list(crypt.get_pem_format(keypair3[0], keypair3[1]))
 }
-
 RELAY_NODES['localhost'] = [base64.b64encode(RELAY_NODES['localhost'][0]).decode('ascii'), base64.b64encode(RELAY_NODES['localhost'][1]).decode('ascii')]
-
 def main():
     listen()
 

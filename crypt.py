@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
+import ast
 
 def main():
     key = gen_aes_key()
@@ -73,7 +74,6 @@ def gen_rsa_keypair():
         backend=default_backend()
         )
     public_key = private_key.public_key()
-
     return private_key, public_key
 
 def encrypt_rsa(public_key, message):
@@ -97,12 +97,11 @@ def decrypt_rsa(private_key, ciphertext):
     :param: bytes/string ciphertext
     '''
     if not isinstance(ciphertext, bytes):
-        ciphertext.encode()
+        raise Exception('Ciphertext should be of byte format, not ' , type(ciphertext))
+
     if not isinstance(private_key, rsa.RSAPrivateKey):
-        '''
-        If it is in pem format, convert to rsa object
-        '''
         private_key = load_private_pem(private_key)
+
     plaintext = private_key.decrypt(
     ciphertext,
     padding.OAEP(
@@ -141,11 +140,7 @@ def encrypt(AES_key, public_key_pem, payload):
     '''
     aes_key_encrypt(payload) + rsa_encrypt(aes_key)
     '''
-    print(public_key_pem)
     public_key = serialization.load_pem_public_key(public_key_pem, backend=default_backend())
-    # print((public_key))
-    print("PAYLOAD")
-    print(type(payload))
     encrypted_payload = encrypt_aes(AES_key, payload)
     encrypted_aes_key = encrypt_rsa(public_key, AES_key)
     return encrypted_aes_key, encrypted_payload
@@ -154,11 +149,22 @@ def decrypt():
     return
 
 def decrypt_payload(AES_key, payload):
-    #return IP and Message as a tuple, both strings
+    '''
+    decrypt payload, try to match for valid url, else next relay node
+    rtype: string destination_url, empty string
+    rtype: string relay_node_ip, next layer of encrypted message
+    '''
     decrypted_payload = (decrypt_aes(AES_key, payload)).decode('UTF8')
-    IP = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', decrypted_payload).group()
-    message = decrypted_payload.replace(IP,'')
-    return IP,message
+    ip_addr_match = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', decrypted_payload)
+    url_match = re.search(r'^((https?|ftp|smtp):\/\/)?(www.)?[a-z0-9]+\.[a-z]+(\/[a-zA-Z0-9#]+\/?)*$', decrypted_payload)
+    if url_match is not None:
+        destination_url = ip_addr_match.group() if ip_addr_match else url_match.group()
+        message = ''
+        return destination_url, message
+    elif ip_addr_match is not None:
+        relay_node_ip = ip_addr_match.group() if ip_addr_match else url_match.group()
+        message = decrypted_payload.replace(relay_node_ip,'')
+        return relay_node_ip, message
 
 
 if __name__ == '__main__':
