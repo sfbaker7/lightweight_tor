@@ -3,7 +3,6 @@
 import sys
 import socket
 import json
-import crypto
 import crypt
 import base64
 from random import shuffle
