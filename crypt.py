@@ -14,7 +14,7 @@ def main():
     decypted_msg = decrypt_aes(key, token)
     private, pub = gen_rsa_keypair()
 
-    message = 'Im RSA'
+    message = b'Im RSA'
     cipher = encrypt_rsa(pub, message)
     plaintext = decrypt_rsa(private, cipher)
 
@@ -57,7 +57,7 @@ def decrypt_aes(key, token):
 def gen_rsa_keypair():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
-        key_size=2048,
+        key_size=1024,
         backend=default_backend()
         )
     public_key = private_key.public_key()
@@ -106,7 +106,8 @@ def encrypt(AES_key, public_key_pem, payload):
     '''
     aes_key_encrypt(payload) + rsa_encrypt(aes_key)
     '''
-    print(public_key_pem)
+    if isinstance(public_key_pem, unicode):
+        public_key_pem = public_key_pem.encode('UTF8')
 
     public_key = serialization.load_pem_public_key(public_key_pem, backend=default_backend())
     print(type(public_key))

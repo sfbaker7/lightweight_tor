@@ -26,7 +26,6 @@ def request_directory():
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
     payload = base64.b64decode(s.recv(8192))  # payload is received as buffer, decode to get str type
     s.close()
-    print(payload)
     relay_nodes = json.loads(payload)
     return relay_nodes
 
@@ -58,8 +57,8 @@ def encrypt_payload(message, circuit, relay_nodes):
           payload = serialize_payload(encrypted_key, encrypted_message)
 
         payload = encrypt(public_key, (payload + next))
-        print(payload)
-        print('----')
+        # print(payload)
+        # print('----')
         break
 
         next = curr_node_addr
