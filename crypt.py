@@ -1,4 +1,5 @@
 import os
+import base64
 import cryptography
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
@@ -14,6 +15,10 @@ def main():
     decypted_msg = decrypt_aes(key, token)
     private, pub = gen_rsa_keypair()
 
+    encryptedKey = encrypt_rsa(pub,key)
+    decryptedKey = decrypt_AESKey(private,encryptedKey)
+    print("ARE THE KEYS THE SAME")
+    print(decryptedKey == key)
     message = b'Im RSA'
     cipher = encrypt_rsa(pub, message)
     plaintext = decrypt_rsa(private, cipher)
@@ -34,11 +39,9 @@ def gen_aes_key():
     '''
     Generates an AES key using the Fernet recipe layer
     :rtype: A URL-safe base64-encoded 32-byte key
-
     '''
     key = Fernet.generate_key()
-    f = Fernet(key)
-    return f
+    return key
 
 def encrypt_aes(key, plaintext_bytes):
     '''
@@ -47,11 +50,11 @@ def encrypt_aes(key, plaintext_bytes):
     :param bytes message: the message in bytes meant to be encrypted
     :rtype: bytes
     '''
-    token = key.encrypt(plaintext_bytes)
+    token = Fernet(key).encrypt(plaintext_bytes)
     return token
 
 def decrypt_aes(key, token):
-    plaintext_bytes = key.decrypt(token)
+    plaintext_bytes = Fernet(key).decrypt(token)
     return plaintext_bytes
 
 def gen_rsa_keypair():
@@ -117,6 +120,15 @@ def encrypt(AES_key, public_key_pem, payload):
     return encrypted_payload, encrypted_aes_key
 
 def decrypt():
+    return
+def decrypt_AESKey(RSA_private_key, encrypted_AES_key):
+    AES_key = decrypt_rsa(RSA_private_key,encrypted_AES_key)
+    return AES_key
+
+def decrypt_payload(AES_key):
+
+
+
     return
 
 
