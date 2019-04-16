@@ -157,14 +157,23 @@ def decrypt_payload(AES_key, payload):
     decrypted_payload = (decrypt_aes(AES_key, payload)).decode('UTF8')
     ip_addr_match = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', decrypted_payload)
     url_match = re.search(r'^((https?|ftp|smtp):\/\/)?(www.)?[a-z0-9]+\.[a-z]+(\/[a-zA-Z0-9#]+\/?)*$', decrypted_payload)
+    localhost_match = re.search(r'localhost:\d{4}', decrypted_payload)
+    destination = ''
+    message = ''
+
     if url_match is not None:
-        destination_url = ip_addr_match.group() if ip_addr_match else url_match.group()
+        destination = url_match.group()
         message = ''
-        return destination_url, message
+    elif localhost_match is not None:
+        destination = localhost_match.group()
+        message = decrypted_payload.replace(destination,'')
     elif ip_addr_match is not None:
-        relay_node_ip = ip_addr_match.group() if ip_addr_match else url_match.group()
-        message = decrypted_payload.replace(relay_node_ip,'')
-        return relay_node_ip, message
+        destination = ip_addr_match.group()
+        message = decrypted_payload.replace(destination,'')
+    else:
+        raise Exception('No match was found')
+
+    return destination, message
 
 
 if __name__ == '__main__':

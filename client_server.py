@@ -15,8 +15,9 @@ AES_KEY = crypt.gen_aes_key()
 def main(message):
     relay_nodes = request_directory()
     circuit = generate_circuit(relay_nodes)
+    entry_node = circuit[0]
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
-    send_request(encrypted_message)
+    send_request(encrypted_message, entry_node)
 
 def request_directory():
     """
@@ -46,7 +47,7 @@ def encrypt_payload(message, circuit, relay_nodes):
     encrypt each layer of the request encrypt(encrypt(M + next_node) + next node)
     """
     node_stack = circuit
-    next = message.encode()# final plaintext will be the original user request
+    next = message # final plaintext will be the original user request
     payload = b''
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
@@ -55,10 +56,7 @@ def encrypt_payload(message, circuit, relay_nodes):
           encrypted_aes_key, encrypted_payload = payload
           payload = serialize_payload(encrypted_aes_key, encrypted_payload)
 
-        payload = encrypt(public_key, (payload + next))
-        print('----')
-        # break
-
+        payload = encrypt(public_key, (payload + next.encode())) #potential for encoding inconsistancy
         next = curr_node_addr
 
     return serialize_payload(payload[0], payload[1])
@@ -70,12 +68,14 @@ def decrypt_payload():
     """
     return ''
 
-def send_request(encrypted_message):
+def send_request(encrypted_message, entry_node):
     """
     send request to first relay node
     """
+    print(entry_node)
+    host, port = entry_node.split(':')
     relay_socket = socket.socket()
-    relay_socket.connect(('localhost', 5000))
+    relay_socket.connect((host, int(port)))
     payload = encrypted_message
     relay_socket.send(payload)
     relay_socket.close()
