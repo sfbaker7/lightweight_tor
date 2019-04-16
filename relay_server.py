@@ -16,7 +16,6 @@ def listen():
     while True:
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(8192)
-        # print(payload)
         res = deserialize_payload(payload)
         clientsocket.close()
         break
@@ -45,9 +44,10 @@ def deserialize_payload(payload):
 
     decrypted_aes_key = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
     print('aes_key', decrypted_aes_key)
-    decrypted_payload = crypt.decrypt_aes(decrypted_aes_key, encrypted_payload) # decrypted_message = encypted_payload + next_ip
-    print(decrypted_payload)
-    return decrypted_payload
+    print(type(encrypted_payload))
+    ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_payload) # decrypted_message = encypted_payload + next_ip
+    print(ip, message)
+    return
 
 if __name__ == '__main__':
     main()

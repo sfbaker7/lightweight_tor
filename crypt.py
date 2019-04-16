@@ -144,7 +144,7 @@ def decrypt():
 
 def decrypt_payload(AES_key, payload):
     #return IP and Message as a tuple, both strings
-    decrypted_payload = (decrypt_aes(AES_key, payload)).decode("UTF-8")
+    decrypted_payload = (decrypt_aes(AES_key, payload)).decode('UTF8')
     IP = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', decrypted_payload).group()
     message = decrypted_payload.replace(IP,'')
     return IP,message
