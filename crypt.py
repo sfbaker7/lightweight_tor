@@ -1,5 +1,6 @@
 import os
 import base64
+import re
 import cryptography
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
@@ -32,6 +33,14 @@ def main():
     print('message', message)
     print('cipher', cipher)
     print('plaintext', plaintext)
+
+    payload = b'dsafdsafdsafads  asdas  192.0.2.2'
+    encryptedpayload = encrypt_aes(key, payload)
+    IP,message = decrypt_payload(key,encryptedpayload)
+    print("IP ADDRESS:")
+    print(IP)
+    print("MESSAGE:")
+    print(message)
 
 
 
@@ -116,19 +125,21 @@ def encrypt(AES_key, public_key_pem, payload):
     encrypted_payload = encrypt_aes(AES_key, payload)
     encrypted_aes_key = encrypt_rsa(public_key, AES_key)
     print(type(encrypted_aes_key))
-    return encrypted_payload, encrypted_aes_key
+    return encrypted_aes_key, encrypted_payload
 
 def decrypt():
     return
+
 def decrypt_AESKey(RSA_private_key, encrypted_AES_key):
     AES_key = decrypt_rsa(RSA_private_key,encrypted_AES_key)
     return AES_key
 
-def decrypt_payload(AES_key):
-
-
-
-    return
+def decrypt_payload(AES_key, payload):
+    #return IP and Message as a tuple, both strings
+    decrypted_payload = (decrypt_aes(AES_key, payload)).decode("UTF-8")
+    IP = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', decrypted_payload).group()
+    message = decrypted_payload.replace(IP,'')
+    return IP,message
 
 
 if __name__ == '__main__':
