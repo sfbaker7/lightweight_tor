@@ -17,7 +17,7 @@ def main():
     private, pub = gen_rsa_keypair()
 
     encryptedKey = encrypt_rsa(pub,key)
-    decryptedKey = decrypt_AESKey(private,encryptedKey)
+    decryptedKey = decrypt_rsa(private,encryptedKey)
     print("ARE THE KEYS THE SAME")
     print(decryptedKey == key)
     message = b'Im RSA'
@@ -90,8 +90,19 @@ def encrypt_rsa(public_key, message):
     )
     return ciphertext
 
-def decrypt_rsa(private_key_pem, ciphertext):
-    private_key = load_private_pem(private_key_pem)
+def decrypt_rsa(private_key, ciphertext):
+    '''
+    Decode ciphertext using RSA private key
+    :param: bytes/rsa_object private_key
+    :param: bytes/string ciphertext
+    '''
+    if not isinstance(ciphertext, bytes):
+        ciphertext.encode()
+    if not isinstance(private_key, rsa.RSAPrivateKey):
+        '''
+        If it is in pem format, convert to rsa object
+        '''
+        private_key = load_private_pem(private_key)
     plaintext = private_key.decrypt(
     ciphertext,
     padding.OAEP(
