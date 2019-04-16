@@ -25,10 +25,8 @@ def listen():
     serversocket.listen(5)
     while True:
         clientsocket, address = serversocket.accept()
-        # print(RELAY_NODES)
         payload = json.dumps(RELAY_NODES) # python3 doesn't allow sending of strings across UDP
-        print (payload)
-        # print('\n')
+        print ('Payload: ', payload)
         clientsocket.send(payload.encode())
         clientsocket.close()
     return
