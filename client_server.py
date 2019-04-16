@@ -38,8 +38,7 @@ def generate_circuit(nodes):
     return circuit
 
 def serialize_payload(key, msg):
-
-    return str(base64.b64encode(key + b'###' + msg))
+    return base64.b64encode(key + b'###' + msg)
 
 def encrypt_payload(message, circuit, relay_nodes):
     """
@@ -53,17 +52,17 @@ def encrypt_payload(message, circuit, relay_nodes):
         public_key = relay_nodes[curr_node_addr][1]
 
         if (isinstance(payload, tuple)):
-          encrypted_key, encrypted_message = payload
-          payload = serialize_payload(encrypted_key, encrypted_message)
+          encrypted_aes_key, encrypted_payload = payload
+          payload = serialize_payload(encrypted_aes_key, encrypted_payload)
 
         payload = encrypt(public_key, (payload + next))
-        # print(payload)
-        # print('----')
-        break
+        print(payload)
+        print('----')
+        # break
 
         next = curr_node_addr
 
-    return base64.b64encode(payload[0] + b'###' +  payload[1])
+    return serialize_payload(payload[0], payload[1])
 
 
 def decrypt_payload():

@@ -81,14 +81,15 @@ def encrypt_rsa(public_key, message):
     )
     return ciphertext
 
-def decrypt_rsa(private_key, ciphertext):
+def decrypt_rsa(private_key_pem, ciphertext):
+    private_key = load_private_pem(private_key_pem)
     plaintext = private_key.decrypt(
     ciphertext,
     padding.OAEP(
          mgf=padding.MGF1(algorithm=hashes.SHA256()),
          algorithm=hashes.SHA256(),
          label=None
-     )
+            )
     )
     return plaintext
 
@@ -104,6 +105,17 @@ def get_pem_format(private_key, public_key):
          )
     return private_pem, public_pem
 
+def load_private_pem(private_key_pem):
+    '''
+    Converts private_key.pem format to private_key object
+    '''
+    private_key = serialization.load_pem_private_key(
+         private_key_pem,
+         password=None,
+         backend=default_backend()
+         )
+    return private_key
+
 
 def encrypt(AES_key, public_key_pem, payload):
     '''
@@ -113,14 +125,15 @@ def encrypt(AES_key, public_key_pem, payload):
         public_key_pem = public_key_pem.encode('UTF8')
 
     public_key = serialization.load_pem_public_key(public_key_pem, backend=default_backend())
-    print(type(public_key))
+    # print((public_key))
     encrypted_payload = encrypt_aes(AES_key, payload)
     encrypted_aes_key = encrypt_rsa(public_key, AES_key)
-    print(type(encrypted_aes_key))
-    return encrypted_payload, encrypted_aes_key
+    # print((encrypted_aes_key))
+    return encrypted_aes_key, encrypted_payload
 
 def decrypt():
     return
+    
 def decrypt_AESKey(RSA_private_key, encrypted_AES_key):
     AES_key = decrypt_rsa(RSA_private_key,encrypted_AES_key)
     return AES_key
