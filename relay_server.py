@@ -6,6 +6,8 @@ import json
 import base64
 import crypt
 
+DIRECTORY_PORT = 3001
+
 def main():
     listen()
 
@@ -24,12 +26,12 @@ def listen():
 
 def get_pk(): #DELETE LATER, private key lookup from directory
     directory_socket = socket.socket()
-    directory_socket.connect(('localhost', 3000))
-    payload = base64.b64decode(directory_socket.recv(8192)) # payload is received as buffer, decode to get str type
+    directory_socket.connect(('localhost', DIRECTORY_PORT))
+    payload = directory_socket.recv(8192).decode() # payload is received as bytes, decode to get as string
     directory_socket.close()
     relay_nodes = json.loads(payload)
-    private_key = relay_nodes['localhost'][0]
-    if (isinstance(private_key, unicode)):
+    private_key = base64.b64decode(relay_nodes['localhost'][0])
+    if (isinstance(private_key, str)):
       private_key = private_key.encode('UTF8')
     return private_key
 
