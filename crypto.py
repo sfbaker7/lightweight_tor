@@ -9,7 +9,7 @@ BLOCK_SIZE = 16
 PADDING = '{'
 
 # Helper Functions
-pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
+pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING if len(s) % BLOCK_SIZE != 0 else s
 encode_aes = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
 decode_aes = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(PADDING)
 
@@ -54,7 +54,11 @@ def decrypt_aes(key, msg):
   :rtype: bytes
   :return: the decrypted message
   """
-  cipher = AES.new(base64.b64decode(key))
+  # print(len(key))
+  # print(len(pad(key)))
+  # # print(pad('asd'))
+  # print(base64.b64decode(key))
+  cipher = AES.new(base64.b64decode(pad(key)))
   decrypted_message = decode_aes(cipher, msg)
   return decrypted_message
 
@@ -67,7 +71,7 @@ def encrypt_rsa(key, msg):
   :rtype: bytes
   :return: the encrypted message
   """
-  print(key, msg)
+  # print(key, msg)
   public_key = RSA.importKey(key)
   encrypted_message = public_key.encrypt(msg, 32)[0]
   return encrypted_message

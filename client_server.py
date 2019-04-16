@@ -4,12 +4,13 @@ import sys
 import socket
 import json
 import crypto
+import crypt
 import base64
 from random import shuffle
 
 DIRECTORY_PORT = 3000
 DIRECTORY_IP = 'localhost'
-AES_KEY = crypto.gen_aes_key() 
+AES_KEY = crypt.gen_aes_key()
 
 def main(message):
     relay_nodes = request_directory()
@@ -23,8 +24,9 @@ def request_directory():
     """
     s = socket.socket()
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
-    payload = s.recv(8192).decode('utf-8')  # payload is received as buffer, decode to get str type
+    payload = base64.b64decode(s.recv(8192))  # payload is received as buffer, decode to get str type
     s.close()
+    print(payload)
     relay_nodes = json.loads(payload)
     return relay_nodes
 
@@ -37,7 +39,8 @@ def generate_circuit(nodes):
     return circuit
 
 def serialize_payload(key, msg):
-  return str(base64.b64encode(msg + b'###' + key))
+
+    return str(base64.b64encode(key + b'###' + msg))
 
 def encrypt_payload(message, circuit, relay_nodes):
     """
@@ -48,15 +51,16 @@ def encrypt_payload(message, circuit, relay_nodes):
     payload = ''
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
-        public_key = relay_nodes[curr_node_addr][0]
-        print('pk', public_key)
-        # private_key = relay_nodes[curr_node_addr][1]
+        public_key = relay_nodes[curr_node_addr][1]
 
         if (isinstance(payload, tuple)):
           encrypted_key, encrypted_message = payload
           payload = serialize_payload(encrypted_key, encrypted_message)
 
         payload = encrypt(public_key, (payload + next))
+        print(payload)
+        print('----')
+        break
 
         next = curr_node_addr
 
@@ -81,10 +85,10 @@ def send_request(encrypted_message):
     return
 
 def encrypt(public_key, payload):
-    return crypto.encrypt(AES_KEY, public_key, payload)
+    return crypt.encrypt(AES_KEY, public_key, payload)
 
 def decrypt(private_key, payload):
-  return crypto.decrypt(AES_KEY, private_key, payload)
+    return crypto.decrypt(AES_KEY, private_key, payload)
 
 if __name__ == '__main__':
     main("www.google.com")
