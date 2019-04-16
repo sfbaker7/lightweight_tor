@@ -9,7 +9,7 @@ from random import shuffle
 
 DIRECTORY_PORT = 3000
 DIRECTORY_IP = 'localhost'
-AES_KEY = crypto.gen_aes_key()
+AES_KEY = crypto.gen_aes_key() 
 
 def main(message):
     relay_nodes = request_directory()
@@ -23,8 +23,7 @@ def request_directory():
     """
     s = socket.socket()
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
-    payload = s.recv(4096).decode('utf-8')  # payload is received as buffer, decode to get str type
-
+    payload = s.recv(8192).decode('utf-8')  # payload is received as buffer, decode to get str type
     s.close()
     relay_nodes = json.loads(payload)
     return relay_nodes
@@ -38,7 +37,7 @@ def generate_circuit(nodes):
     return circuit
 
 def serialize_payload(key, msg):
-  return base64.b64encode(msg + b'###' + key).decode('utf-8')
+  return str(base64.b64encode(msg + b'###' + key))
 
 def encrypt_payload(message, circuit, relay_nodes):
     """
@@ -49,18 +48,19 @@ def encrypt_payload(message, circuit, relay_nodes):
     payload = ''
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
-        public_key = relay_nodes[curr_node_addr]
-        # print('public key', public_key)
-        # print('node', curr_node_addr)
+        public_key = relay_nodes[curr_node_addr][0]
+        print('pk', public_key)
+        # private_key = relay_nodes[curr_node_addr][1]
 
         if (isinstance(payload, tuple)):
           encrypted_key, encrypted_message = payload
           payload = serialize_payload(encrypted_key, encrypted_message)
 
         payload = encrypt(public_key, (payload + next))
+
         next = curr_node_addr
 
-    return serialize_payload(payload[0], payload[1])
+    return base64.b64encode(payload[0] + b'###' +  payload[1])
 
 
 def decrypt_payload():
@@ -75,7 +75,7 @@ def send_request(encrypted_message):
     """
     relay_socket = socket.socket()
     relay_socket.connect(('localhost', 5000))
-    payload = encrypted_message.encode('utf-8')
+    payload = encrypted_message
     relay_socket.send(payload)
     relay_socket.close()
     return
