@@ -19,14 +19,11 @@ def listen():
     while True:
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(8192)
-        # print(payload)
-        # print(type(payload))
-        print('payload recieved from clientsocket', len(payload))
 
         clientsocket.close()
         next_ip, message = deserialize_payload(payload)
-        forward_payload(next_ip, message)
-        break
+        response = forward_payload(next_ip, message)
+        print(response)
 
     return
 
@@ -46,21 +43,21 @@ def deserialize_payload(payload):
     decoded_payload = base64.b64decode(payload)
     encrypted_aes_key, encrypted_message = split_bytes(b'###', decoded_payload)
     decrypted_aes_key = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
-    ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
-    return ip, message
+    next_ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
+    return next_ip, message
 
 def forward_payload(next_ip, message):
-    if is_valid_ip(next_ip):
+    if is_exit_node(message):
         #request website
-        req = requests.get(message)
-        print(req.text)
+        req = requests.get(next_ip)
+        return req.text
     else:
         next_ip = 'foo'
         #connect to socket of next relay
     return
 
-def is_valid_ip(ip_addr):
-    return True
+def is_exit_node(message): #think of better way to check?
+    return True if message is '' else False
 
 def get_pk(): #DELETE LATER, private key lookup from directory
     directory_socket = socket.socket()
