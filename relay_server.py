@@ -8,6 +8,7 @@ import crypt
 import requests
 
 DIRECTORY_PORT = 3001
+RELAY_PORT = 5001
 HASH_DELIMITER = b'###'
 
 def main():
@@ -15,17 +16,14 @@ def main():
 
 def listen():
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serversocket.bind(('localhost', 5000))
+    serversocket.bind(('localhost', RELAY_PORT))
     serversocket.listen(5)
     while True:
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(8192)
-
         clientsocket.close()
         next_ip, message = deserialize_payload(payload)
         response = forward_payload(next_ip, message)
-        print(response)
-
     return
 
 def split_bytes(delimiter, bytestring):
@@ -53,8 +51,15 @@ def forward_payload(next_ip, message):
         req = requests.get(next_ip)
         return req.text
     else:
-        next_ip = 'foo'
-        #connect to socket of next relay
+        payload = message.encode()
+        host, port = next_ip.split(':')
+        relay_socket = socket.socket()
+        relay_socket.connect((host, int(port)))
+        print('message: ', payload)
+        print('message type: ', type(payload))
+        print('message len: ', len(payload))
+        relay_socket.send(payload)
+        relay_socket.close()
     return
 
 def is_exit_node(message): #think of better way to check?
@@ -66,7 +71,7 @@ def get_pk(): #DELETE LATER, private key lookup from directory
     payload = directory_socket.recv(8192) # payload is received as bytes, decode to get as string
     directory_socket.close()
     relay_nodes = json.loads(payload)
-    private_key = base64.b64decode(relay_nodes['localhost'][0])
+    private_key = base64.b64decode(relay_nodes['localhost:' + str(RELAY_PORT)][0])
 
     return private_key
 
