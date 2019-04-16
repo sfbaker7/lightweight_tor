@@ -23,7 +23,7 @@ def request_directory():
     """
     s = socket.socket()
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
-    payload = s.recv(8192).decode()  # payload is received as buffer, decode to get str type
+    payload = s.recv(8192).decode()  # payload is received as bytes, decode to get str type
     print(payload)
     s.close()
     relay_nodes = json.loads(payload)

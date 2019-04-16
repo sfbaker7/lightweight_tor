@@ -130,8 +130,6 @@ def encrypt(AES_key, public_key_pem, payload):
     '''
     aes_key_encrypt(payload) + rsa_encrypt(aes_key)
     '''
-    if isinstance(public_key_pem, str):
-        public_key_pem = public_key_pem.encode('UTF8')
     print(public_key_pem)
     public_key = serialization.load_pem_public_key(public_key_pem, backend=default_backend())
     # print((public_key))
