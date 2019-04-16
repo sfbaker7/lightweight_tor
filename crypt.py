@@ -74,7 +74,6 @@ def gen_rsa_keypair():
         backend=default_backend()
         )
     public_key = private_key.public_key()
-
     return private_key, public_key
 
 def encrypt_rsa(public_key, message):
@@ -103,7 +102,6 @@ def decrypt_rsa(private_key, ciphertext):
     if not isinstance(private_key, rsa.RSAPrivateKey):
         private_key = load_private_pem(private_key)
 
-    print('cipher length:',len(ciphertext))
     plaintext = private_key.decrypt(
     ciphertext,
     padding.OAEP(
@@ -142,14 +140,9 @@ def encrypt(AES_key, public_key_pem, payload):
     '''
     aes_key_encrypt(payload) + rsa_encrypt(aes_key)
     '''
-    print(public_key_pem)
     public_key = serialization.load_pem_public_key(public_key_pem, backend=default_backend())
-    # print((public_key))
-    print("PAYLOAD")
-    print(type(payload))
     encrypted_payload = encrypt_aes(AES_key, payload)
     encrypted_aes_key = encrypt_rsa(public_key, AES_key)
-    print('aeslength in encrypt', len(encrypted_aes_key))
     return encrypted_aes_key, encrypted_payload
 
 def decrypt():

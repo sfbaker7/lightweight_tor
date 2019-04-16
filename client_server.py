@@ -9,6 +9,7 @@ from random import shuffle
 
 DIRECTORY_PORT = 3001
 DIRECTORY_IP = 'localhost'
+HASH_DELIMITER = b'###'
 AES_KEY = crypt.gen_aes_key()
 
 def main(message):
@@ -38,21 +39,18 @@ def generate_circuit(nodes):
     return circuit
 
 def serialize_payload(aes_key, message):
-    return base64.b64encode(aes_key + b'###' + message)
+    return base64.b64encode(aes_key + HASH_DELIMITER + message)
 
 def encrypt_payload(message, circuit, relay_nodes):
     """
     encrypt each layer of the request encrypt(encrypt(M + next_node) + next node)
     """
-    i = 0
     node_stack = circuit
     next = message.encode()# final plaintext will be the original user request
     payload = b''
     while len(node_stack) != 0:
         curr_node_addr = node_stack.pop()
         public_key = base64.b64decode(relay_nodes[curr_node_addr][1]) #decode public key here
-        # print(public_key)
-        # print(type(public_key))
         if (isinstance(payload, tuple)):
           encrypted_aes_key, encrypted_payload = payload
           payload = serialize_payload(encrypted_aes_key, encrypted_payload)

@@ -8,6 +8,7 @@ import crypt
 import requests
 
 DIRECTORY_PORT = 3001
+HASH_DELIMITER = b'###'
 
 def main():
     listen()
@@ -41,7 +42,7 @@ def deserialize_payload(payload):
     :param: bytestring payload: encrypted_aes_key, encrypted_message
     '''
     decoded_payload = base64.b64decode(payload)
-    encrypted_aes_key, encrypted_message = split_bytes(b'###', decoded_payload)
+    encrypted_aes_key, encrypted_message = split_bytes(HASH_DELIMITER, decoded_payload)
     decrypted_aes_key = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
     next_ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
     return next_ip, message
