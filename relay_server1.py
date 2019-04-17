@@ -21,7 +21,7 @@ def listen():
     serversocket.listen(5)
     next_ip = None
     while True:
-        print('RECIEVER PORT:' + str(RELAY_PORT) + 'SENDER IP:' + str(FORWARDING_PORT))
+        print('RECIEVER PORT:' + str(RELAY_PORT) + ' SENDER IP:' + str(FORWARDING_PORT))
 
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(8192)
@@ -37,7 +37,8 @@ def listen():
             print('TO <<<<<<', previous_ip)
 
             # serversocket.send(b'ktov')
-            clientsocket.sendall(response)
+            encrypted_payload = serialize_payload(response)
+            clientsocket.sendall(encrypted_payload)
 
         clientsocket.close()
 
@@ -49,9 +50,22 @@ def deserialize_payload(payload):
     '''
     decoded_payload = base64.b64decode(payload)
     encrypted_aes_key, encrypted_message = split_bytes(HASH_DELIMITER, decoded_payload)
+    global decrypted_aes_key
     decrypted_aes_key = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
     next_ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
     return next_ip, message
+
+def serialize_payload(message):
+    if not isinstance(message, bytes):
+        raise Exception('Message should be of byte format, not ' , type(message))
+    # print('MESSAGE BEFORE ', message)
+    # print('decrypted_aes_key BEFORE', decrypted_aes_key)
+    aes_encrypted_message = crypt.encrypt_aes(decrypted_aes_key, message)
+    # print('MESSAGE AFTER ', aes_encrypted_message)
+    # print('decrypted_aes_key AFTER', decrypted_aes_key)
+    # decrypt_message = crypt.decrypt_aes(decrypted_aes_key, aes_encrypted_message)
+    # print('MESSAGE AFTER ', decrypt_message)
+    return aes_encrypted_message
 
 def forward_payload(next_ip, message):
     if is_exit_node(message):
@@ -59,6 +73,8 @@ def forward_payload(next_ip, message):
         req = requests.get(next_ip)
         #encrypt layer
         return req.text.encode() #change later
+        # return 'helo'.encode()
+
     else:
         payload = message.encode()
         host, port = next_ip.split(':')
@@ -70,7 +86,7 @@ def forward_payload(next_ip, message):
         relay_socket.send(payload)
         response = relay_socket.recv(8192)
         print('<<<<< FROM localhost:', port)
-        print('RESPONSE DATA:', response)
+        # print('RESPONSE DATA:', response)
         relay_socket.close()
         return response
 
