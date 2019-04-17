@@ -103,7 +103,7 @@ def split_bytes(delimiter, bytestring):
 def get_pk(): #DELETE LATER, private key lookup from directory
     directory_socket = socket.socket()
     directory_socket.connect(('localhost', DIRECTORY_PORT))
-    payload = directory_socket.recv(8192000000) # payload is received as bytes, decode to get as string
+    payload = directory_socket.recv(8192) # payload is received as bytes, decode to get as string
     directory_socket.close()
     relay_nodes = json.loads(payload)
     private_key = base64.b64decode(relay_nodes['localhost:' + str(RELAY_PORT)][0])
