@@ -96,7 +96,7 @@ def send_request(encrypted_message, entry_node):
     relay_socket.connect((host, int(port)))
     payload = encrypted_message
     relay_socket.send(payload)
-    response = relay_socket.recv(8192000000)
+    response = relay_socket.recv(81920000)
     relay_socket.close()
     return response
 
