@@ -16,7 +16,7 @@ AES_KEY = crypt.gen_aes_key()
 def main(message):
     relay_nodes = request_directory()
     circuit = generate_circuit(relay_nodes)
-    entry_node = circuit[0]
+    entry_node = circuit[0][0]
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
     send_request(encrypted_message, entry_node)
 
@@ -36,7 +36,7 @@ def generate_circuit(nodes):
     """
     randomly select order of relay nodes
     """
-    circuit = [str(ip) for ip in nodes.keys()]
+    circuit = [(str(ip), crypt.gen_aes_key()) for ip in nodes.keys()]
     shuffle(circuit)
     return circuit
 
@@ -51,13 +51,16 @@ def encrypt_payload(message, circuit, relay_nodes):
     next = message # final plaintext will be the original user request
     payload = b''
     while len(node_stack) != 0:
-        curr_node_addr = node_stack.pop()
+        curr_node = node_stack.pop()
+        curr_node_addr = curr_node[0]
+        curr_aes_key_instance = curr_node[1]
         public_key = base64.b64decode(relay_nodes[curr_node_addr][1]) #decode public key here
         if (isinstance(payload, tuple)):
           encrypted_aes_key, encrypted_payload = payload
           payload = serialize_payload(encrypted_aes_key, encrypted_payload)
 
-        payload = encrypt(public_key, (payload + next.encode())) #potential for encoding inconsistancy
+        # payload encrypt(public_key, (payload + next.encode())) #potential for encoding inconsistancy
+        payload = crypt.encrypt(curr_aes_key_instance, public_key, (payload + next.encode()))
         next = curr_node_addr
 
     return serialize_payload(payload[0], payload[1])

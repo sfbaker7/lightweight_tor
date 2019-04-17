@@ -31,12 +31,11 @@ def listen():
         response = forward_payload(next_ip, message)
         if response is not None:
             '''
-            Case: exit node
+            Case: send to previous_ip
             '''
             #encrypt layer
             print('TO <<<<<<', previous_ip)
-
-            # serversocket.send(b'ktov')
+            # encrypted_payload = serialize_payload(response)
             clientsocket.sendall(response)
 
         clientsocket.close()
@@ -53,11 +52,16 @@ def deserialize_payload(payload):
     next_ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
     return next_ip, message
 
+def serialize_payload(message):
+    if not isinstance(message, bytes):
+        raise Exception('Message should be of byte format, not ' , type(message))
+    aes_encrypted_message = crypt.encrypt_aes(decrypted_aes_key, message)
+    rsa_encrypted_aes = crypt.encrypt_rsa(PRIVATE_KEY, aes_encrypted_message)
+    return
+
 def forward_payload(next_ip, message):
     if is_exit_node(message):
-        #request website
         req = requests.get(next_ip)
-        #encrypt layer
         return req.text.encode() #change later
     else:
         payload = message.encode()
