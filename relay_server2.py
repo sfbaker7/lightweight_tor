@@ -8,8 +8,8 @@ import crypt
 import requests
 
 DIRECTORY_PORT = 3001
-RELAY_PORT = 5001
-FORWARDING_PORT = 7001
+RELAY_PORT = 5003
+FORWARDING_PORT = 7003
 HASH_DELIMITER = b'###'
 
 def main():
@@ -22,7 +22,6 @@ def listen():
     next_ip = None
     while True:
         print('RECIEVER PORT:' + str(RELAY_PORT) + 'SENDER IP:' + str(FORWARDING_PORT))
-
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(8192)
         previous_ip = parse_address(address)
