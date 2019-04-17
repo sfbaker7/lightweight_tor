@@ -15,7 +15,7 @@ Each relay node only know its predecessor and successor and will not be able to 
 #### How Relay Nodes in TOR Work
 ![tor](images/tor.png)
 
-Traditionally, Tor uses a stream cipher, a public-key cipher, the Diffie-Hellman protocol, and a hash function. For a stream cipher, Tor uses 128-bit AES in counter mode, with an initialization vector (IV) of all 0 bytes. For a public-key cipher, Tor uses RSA with 1024- bit keys and a fixed exponent of 65537.
+Traditionally, Tor uses a stream cipher, a public-key cipher, the Diffie-Hellman protocol, and a hash function. For a stream cipher, Tor uses 128-bit AES in counter mode, with an initialization vector (IV) of all 0 bytes. For a public-key cipher, Tor uses RSA with 1024-bit keys and a fixed exponent of 65537.
 
 In our lightweight implementation, we omitted the Diffie-Hellman protocol for key exchange, but instead focused on the hybrid cryptosystem with stream ciphers for encoding messages and public key infrastructure for protecting private symmetric keys. To do this, we utilized a python [cryptography package](https://cryptography.io/en/latest/) that comes with helper methods to generate, encrypt, and decrypt in AES and RSA formats. In particular, we used the [Fernet helper class](https://cryptography.io/en/latest/fernet/) (based on AES with cipher block chaining, 128 bit key, os.urandom() for initialization vector, PKCS7 padding, and SHA256) from the package for symmetric encryption. For asymmetric encryption, we implemented RSA just like the actual TOR with 1024 bit keys and a fixed exponent of 65537. Our payloads (encrypted plain text message and IP of next node in circuit) are sent between in byte form.
 
