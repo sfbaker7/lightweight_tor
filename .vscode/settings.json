@@ -1,3 +1,4 @@
 {
-  "python.pythonPath": "dev/bin/python3"
+  "python.pythonPath": "dev/bin/python3",
+  "python.linting.pylintEnabled": true
 }

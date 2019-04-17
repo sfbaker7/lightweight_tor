@@ -6,12 +6,16 @@ TOR, an open source and free software designed to provide online anonymity. TORâ
 
 ## Onion Routing
 An onion has many layers, just like how an onion network has multiple layers of encryption surrounding messages. The client will encapsulate the message it is trying to send to the destination server with as many layers of encryption as there are intermediary nodes, which is visualized below:
-![](image.png)
+
+#### How TOR Works
+![tor](images/tor.png)
 
 Each relay node only know its predecessor and successor and will not be able to see the plain-text message, with only the exit relay node being able to see the unencrypted message. However, the exit node will have no idea who the source of the message is. Additionally, there may be TLS infrastructure (such as HTTPS) between the exit node and destination server. Onion routing provides perfect forward secrecy between relays.
 
+In our lightweight implementation, we do use Diffie-Hellman for key exchange, but instead focused on the hybrid cryptosystem with **stream ciphers** for encoding messages and public key infrastructure for protecting private symmetric keys. To do this, we utilized a python [cryptography package](https://cryptography.io/en/latest/) that comes with helper methods to generate, encrypt, and decrypt in AES and RSA formats. In particular, we used the [Fernet helper class](https://cryptography.io/en/latest/fernet/) (based on AES with cipher block chaining, 128 bit key, os.urandom() for initialization vector, PKCS7 padding, and SHA256) from the package for symmetric encryption. For asymmetric encryption, we implemented RSA just like the actual TOR with 1024 bit keys and a fixed exponent of 65537. Our payloads (encrypted plain text message and IP of next node in circuit) are sent between in byte form.
 
-In our lightweight implementation, we do use Diffie-Hellman for key exchange, but instead focused on the hybrid cryptosystem with stream cipher for encoding messages and public key infrastructure for protecting private symmetric keys. To do this, we utilized a python [cryptography package](https://cryptography.io/en/latest/) that comes with helper methods to generate, encrypt, and decrypt in AES and RSA formats. In particular, we used the [Fernet helper class](https://cryptography.io/en/latest/fernet/) (based on AES with cipher block chaining, 128 bit key, os.urandom() for initialization vector, PKCS7 padding, and SHA256) from the package for symmetric encryption. For asymmetric encryption, we implemented RSA just like the actual TOR with 1024 bit keys and a fixed exponent of 65537. Our payloads (encrypted plain text message and IP of next node in circuit) are sent between in byte form.
+#### How Stream Ciphers Work
+![stream cipher](./images/cipher-encryption.png)
 
 A random circuit is generated for every request session. Assuming a client, a destination server, and 3 relay nodes  (Node 3 is the exit node, Node 2 is an intermediary node, Node 1 is the entry node), our onion layers would look like so:
 ```
