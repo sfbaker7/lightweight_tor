@@ -23,7 +23,7 @@ def listen():
     while True:
         print('RECIEVER PORT:' + str(RELAY_PORT) + ' SENDER IP:' + str(FORWARDING_PORT))
         clientsocket, address = serversocket.accept()
-        payload = clientsocket.recv(8192000000)
+        payload = clientsocket.recv(81920000)
         previous_ip = parse_address(address)
         print('FROM >>>> ', previous_ip)
         next_ip, message = deserialize_payload(payload)
@@ -103,7 +103,7 @@ def split_bytes(delimiter, bytestring):
 def get_pk(): #DELETE LATER, private key lookup from directory
     directory_socket = socket.socket()
     directory_socket.connect(('localhost', DIRECTORY_PORT))
-    payload = directory_socket.recv(8192000000) # payload is received as bytes, decode to get as string
+    payload = directory_socket.recv(8192) # payload is received as bytes, decode to get as string
     directory_socket.close()
     relay_nodes = json.loads(payload)
     private_key = base64.b64decode(relay_nodes['localhost:' + str(RELAY_PORT)][0])
