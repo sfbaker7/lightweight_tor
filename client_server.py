@@ -6,6 +6,7 @@ import json
 import crypt
 import base64
 from random import shuffle
+from cryptography.fernet import Fernet
 
 DIRECTORY_PORT = 3001
 CLIENT_PORT = 4050
@@ -16,9 +17,15 @@ AES_KEY = crypt.gen_aes_key()
 def main(message):
     relay_nodes = request_directory()
     circuit = generate_circuit(relay_nodes)
-    entry_node = circuit[0]
+    circuit_copy = list(circuit)
+    entry_node = circuit[0][0]
+    print(circuit)
+
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
-    send_request(encrypted_message, entry_node)
+    response = send_request(encrypted_message, entry_node)
+    print('circuit', circuit_copy)
+    print('response', response)
+    decrypt_payload(response, circuit_copy)
 
 def request_directory():
     """
@@ -36,7 +43,7 @@ def generate_circuit(nodes):
     """
     randomly select order of relay nodes
     """
-    circuit = [str(ip) for ip in nodes.keys()]
+    circuit = [(str(ip), crypt.gen_aes_key()) for ip in nodes.keys()]
     shuffle(circuit)
     return circuit
 
@@ -51,23 +58,35 @@ def encrypt_payload(message, circuit, relay_nodes):
     next = message # final plaintext will be the original user request
     payload = b''
     while len(node_stack) != 0:
-        curr_node_addr = node_stack.pop()
+        curr_node = node_stack.pop()
+        curr_node_addr = curr_node[0]
+        curr_aes_key_instance = curr_node[1]
         public_key = base64.b64decode(relay_nodes[curr_node_addr][1]) #decode public key here
         if (isinstance(payload, tuple)):
           encrypted_aes_key, encrypted_payload = payload
           payload = serialize_payload(encrypted_aes_key, encrypted_payload)
 
-        payload = encrypt(public_key, (payload + next.encode())) #potential for encoding inconsistancy
+        # payload encrypt(public_key, (payload + next.encode())) #potential for encoding inconsistancy
+        payload = crypt.encrypt(curr_aes_key_instance, public_key, (payload + next.encode()))
         next = curr_node_addr
 
     return serialize_payload(payload[0], payload[1])
 
 
-def decrypt_payload():
+def decrypt_payload(payload, circuit):
     """
     decrypt each layer of the request
     """
-    return ''
+    # message = payload
+    for ip, aes_key in circuit:
+        # print(message)
+
+        # print(message.decode())
+        print(ip,aes_key)
+        print(Fernet(aes_key))
+        message = crypt.decrypt_aes(aes_key, payload)
+        print(message)
+    return message
 
 def send_request(encrypted_message, entry_node):
     """
@@ -82,8 +101,7 @@ def send_request(encrypted_message, entry_node):
     relay_socket.send(payload)
     response = relay_socket.recv(8192)
     relay_socket.close()
-    print(response)
-    return
+    return response
 
 def encrypt(public_key, payload):
     print(type(payload))
