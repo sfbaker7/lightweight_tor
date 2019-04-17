@@ -23,7 +23,7 @@ def listen():
     while True:
         print('RECIEVER PORT:' + str(RELAY_PORT) + ' SENDER IP:' + str(FORWARDING_PORT))
         clientsocket, address = serversocket.accept()
-        payload = clientsocket.recv(8192000000)
+        payload = clientsocket.recv(81920000)
         previous_ip = parse_address(address)
         print('FROM >>>> ', previous_ip)
         next_ip, message = deserialize_payload(payload)

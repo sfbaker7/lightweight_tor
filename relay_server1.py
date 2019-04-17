@@ -81,7 +81,7 @@ def forward_payload(next_ip, message):
         print('>>>> TO localhost:', port)
         relay_socket.connect((host, int(port)))
         relay_socket.send(payload)
-        response = relay_socket.recv(8192000000)
+        response = relay_socket.recv(81920000)
         print('<<<<< FROM localhost:', port)
   
         relay_socket.close()
