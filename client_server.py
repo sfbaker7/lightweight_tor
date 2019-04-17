@@ -8,6 +8,7 @@ import base64
 from random import shuffle
 
 DIRECTORY_PORT = 3001
+CLIENT_PORT = 4050
 DIRECTORY_IP = 'localhost'
 HASH_DELIMITER = b'###'
 AES_KEY = crypt.gen_aes_key()
@@ -43,9 +44,9 @@ def serialize_payload(aes_key, message):
     return base64.b64encode(aes_key + HASH_DELIMITER + message)
 
 def encrypt_payload(message, circuit, relay_nodes):
-    """
+    '''
     encrypt each layer of the request encrypt(encrypt(M + next_node) + next node)
-    """
+    '''
     node_stack = circuit
     next = message # final plaintext will be the original user request
     payload = b''
@@ -75,10 +76,13 @@ def send_request(encrypted_message, entry_node):
     print(entry_node)
     host, port = entry_node.split(':')
     relay_socket = socket.socket()
+    relay_socket.bind(('localhost', CLIENT_PORT))
     relay_socket.connect((host, int(port)))
     payload = encrypted_message
     relay_socket.send(payload)
+    response = relay_socket.recv(8192)
     relay_socket.close()
+    print(response)
     return
 
 def encrypt(public_key, payload):

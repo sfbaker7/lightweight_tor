@@ -8,8 +8,8 @@ import crypt
 import requests
 
 DIRECTORY_PORT = 3001
-RELAY_PORT = 5001
-FORWARDING_PORT = 7001
+RELAY_PORT = 5002
+FORWARDING_PORT = 7002
 HASH_DELIMITER = b'###'
 
 def main():

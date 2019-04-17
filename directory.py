@@ -29,7 +29,7 @@ def listen():
         payload = json.dumps(RELAY_NODES) # python3 doesn't allow sending of strings across UDP
         print ('Payload: ', payload)
         clientsocket.send(payload.encode())
-        clientsocket.close()
+    clientsocket.close()
     return
 
 def get_private_key(): #delete later
