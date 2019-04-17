@@ -19,13 +19,11 @@ def main(message):
     circuit = generate_circuit(relay_nodes)
     circuit_copy = list(circuit)
     entry_node = circuit[0][0]
-    print(circuit)
 
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
     response = send_request(encrypted_message, entry_node)
-    print('circuit', circuit_copy)
-    print('response', response)
-    decrypt_payload(response, circuit_copy)
+    result = decrypt_payload(response, circuit_copy)
+    print(result)
 
 def request_directory():
     """
@@ -77,38 +75,30 @@ def decrypt_payload(payload, circuit):
     """
     decrypt each layer of the request
     """
-    # message = payload
-    for ip, aes_key in circuit:
-        # print(message)
+    message = payload
+    for i in range(len(circuit)):
+        ip = circuit[i][0]
+        aes_key = circuit[i][1]
 
-        # print(message.decode())
-        print(ip,aes_key)
-        print(Fernet(aes_key))
-        message = crypt.decrypt_aes(aes_key, payload)
-        print(message)
+        decoded_message = base64.b64decode(message)
+        message = crypt.decrypt_aes(aes_key, decoded_message)
+
     return message
 
 def send_request(encrypted_message, entry_node):
     """
     send request to first relay node
     """
-    print(entry_node)
+    # print(entry_node)
     host, port = entry_node.split(':')
     relay_socket = socket.socket()
     relay_socket.bind(('localhost', CLIENT_PORT))
     relay_socket.connect((host, int(port)))
     payload = encrypted_message
     relay_socket.send(payload)
-    response = relay_socket.recv(8192)
+    response = relay_socket.recv(8192000000)
     relay_socket.close()
     return response
-
-def encrypt(public_key, payload):
-    print(type(payload))
-    return crypt.encrypt(AES_KEY, public_key, payload)
-
-def decrypt(private_key, payload):
-    return crypt.decrypt(AES_KEY, private_key, payload)
 
 if __name__ == '__main__':
     main("http://www.google.com")

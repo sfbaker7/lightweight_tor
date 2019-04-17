@@ -38,6 +38,8 @@ def listen():
 
             # serversocket.send(b'ktov')
             encrypted_payload = serialize_payload(response)
+            print(decrypted_aes_key)
+            # print('encrypted payload', encrypted_payload)
             clientsocket.sendall(encrypted_payload)
 
         clientsocket.close()
@@ -58,22 +60,17 @@ def deserialize_payload(payload):
 def serialize_payload(message):
     if not isinstance(message, bytes):
         raise Exception('Message should be of byte format, not ' , type(message))
-    # print('MESSAGE BEFORE ', message)
-    # print('decrypted_aes_key BEFORE', decrypted_aes_key)
+
     aes_encrypted_message = crypt.encrypt_aes(decrypted_aes_key, message)
-    # print('MESSAGE AFTER ', aes_encrypted_message)
-    # print('decrypted_aes_key AFTER', decrypted_aes_key)
-    # decrypt_message = crypt.decrypt_aes(decrypted_aes_key, aes_encrypted_message)
-    # print('MESSAGE AFTER ', decrypt_message)
-    return aes_encrypted_message
+    return base64.b64encode(aes_encrypted_message)
 
 def forward_payload(next_ip, message):
     if is_exit_node(message):
         #request website
         req = requests.get(next_ip)
         #encrypt layer
-        return req.text.encode() #change later
-        # return 'helo'.encode()
+        return req.text.encode()
+
 
     else:
         payload = message.encode()
@@ -84,9 +81,9 @@ def forward_payload(next_ip, message):
         print('>>>> TO localhost:', port)
         relay_socket.connect((host, int(port)))
         relay_socket.send(payload)
-        response = relay_socket.recv(8192)
+        response = relay_socket.recv(8192000000)
         print('<<<<< FROM localhost:', port)
-        # print('RESPONSE DATA:', response)
+  
         relay_socket.close()
         return response
 

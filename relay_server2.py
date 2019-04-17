@@ -23,7 +23,7 @@ def listen():
     while True:
         print('RECIEVER PORT:' + str(RELAY_PORT) + ' SENDER IP:' + str(FORWARDING_PORT))
         clientsocket, address = serversocket.accept()
-        payload = clientsocket.recv(8192)
+        payload = clientsocket.recv(8192000000)
         previous_ip = parse_address(address)
         print('FROM >>>> ', previous_ip)
         next_ip, message = deserialize_payload(payload)
@@ -35,8 +35,9 @@ def listen():
             #encrypt layer
             print('TO <<<<<<', previous_ip)
 
-            # serversocket.send(b'ktov')
             encrypted_payload = serialize_payload(response)
+            print(decrypted_aes_key)
+
             clientsocket.sendall(encrypted_payload)
 
         clientsocket.close()
@@ -57,22 +58,16 @@ def deserialize_payload(payload):
 def serialize_payload(message):
     if not isinstance(message, bytes):
         raise Exception('Message should be of byte format, not ' , type(message))
-    # print('MESSAGE BEFORE ', message)
-    # print('decrypted_aes_key BEFORE', decrypted_aes_key)
+
     aes_encrypted_message = crypt.encrypt_aes(decrypted_aes_key, message)
-    # print('MESSAGE AFTER ', aes_encrypted_message)
-    # print('decrypted_aes_key AFTER', decrypted_aes_key)
-    # decrypt_message = crypt.decrypt_aes(decrypted_aes_key, aes_encrypted_message)
-    # print('MESSAGE AFTER ', decrypt_message)
-    return aes_encrypted_message
+    return base64.b64encode(aes_encrypted_message)
 
 def forward_payload(next_ip, message):
     if is_exit_node(message):
         #request website
         req = requests.get(next_ip)
         #encrypt layer
-        return req.text.encode() #change later
-        # return 'helo'.encode()
+        return req.text.encode()
     else:
         payload = message.encode()
         host, port = next_ip.split(':')
@@ -82,7 +77,7 @@ def forward_payload(next_ip, message):
         print('>>>> TO localhost:', port)
         relay_socket.connect((host, int(port)))
         relay_socket.send(payload)
-        response = relay_socket.recv(8192)
+        response = relay_socket.recv(819200000)
         print('<<<<< FROM localhost:', port)
         # print('RESPONSE DATA:', response)
         relay_socket.close()
@@ -108,7 +103,7 @@ def split_bytes(delimiter, bytestring):
 def get_pk(): #DELETE LATER, private key lookup from directory
     directory_socket = socket.socket()
     directory_socket.connect(('localhost', DIRECTORY_PORT))
-    payload = directory_socket.recv(8192) # payload is received as bytes, decode to get as string
+    payload = directory_socket.recv(8192000000) # payload is received as bytes, decode to get as string
     directory_socket.close()
     relay_nodes = json.loads(payload)
     private_key = base64.b64decode(relay_nodes['localhost:' + str(RELAY_PORT)][0])
