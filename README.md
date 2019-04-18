@@ -1,5 +1,7 @@
 # lightweight_tor
-A light weight implementation of "tor". Use relay nodes hosted on Duke VMs to anonymize your browsing.
+A lightweight, python implementation of onion routing used by tor. This is a proof of concept where the user enters a web url on the command line and then receives the anonymized response in html, css, and js.
+
+It is set up so that relay nodes are run on local host at different port numbers, but it could easily be tweaked to run on remote servers. 
 
 ## Background
 TOR, an open source and free software designed to provide online anonymity. TOR’s name is derived from “The Onion Routing”.  It uses a voluntary network of several thousand voluntary relay server nodes in order to shield users from network surveillance and traffic analysis.
