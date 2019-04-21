@@ -61,7 +61,7 @@ def listen():
 
         clientsocket.close()
   except Exception:
-    logger.exception("Unable to connect to server")
+    logger.error("Unable to connect to server")
     logger.error(traceback.format_exc()) 
   return
 
