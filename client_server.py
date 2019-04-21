@@ -15,15 +15,40 @@ HASH_DELIMITER = b'###'
 AES_KEY = crypt.gen_aes_key()
 
 def main(message):
+    print('---- REQUEST RELAY NODES FROM DIRECTORY ----')
     relay_nodes = request_directory()
+    print('RELAY NODES: ', relay_nodes)
+    print('\n')
+    print('---- GENERATE CIRCUIT FOR ONION ROUTING ----')
     circuit = generate_circuit(relay_nodes)
+    print('CIRCUIT IS: ', circuit)
     circuit_copy = list(circuit)
     entry_node = circuit[0][0]
-
+    print('ENTRY NODE IS: ', entry_node)
+    print('\n')
+    print('---- BEGIN ENCRYPTION PROCESS TO WRAP ONION ----')
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
+    print('---- END ENCRYPTION PROCESS TO WRAP ONION ----')
+    print('ENCRYPTED MESSAGE: ', encrypted_message)
+    print('\n')
+    print('---- SEND REQUEST TO ENTRY NODE ----')
     response = send_request(encrypted_message, entry_node)
-    result = decrypt_payload(response, circuit_copy)
+    print('...onion routing via relay nodes')
+    print('...onion routing via relay nodes')
+    print('...onion routing via relay nodes')
+    print('\n')
+    print('...received response from destination')
+    byteStream = decrypt_payload(response, circuit_copy)
+    result = byteStream.decode()
+    print('---- DECODED RESPONSE FROM DESTINATION ----\n')
     print(result)
+    # write result to html file
+    print('---- BEGIN WRITE RESULT TO HTML FILE ----')
+    f = open('response.html','w')
+    f.write(result)
+    f.close()
+    print('---- END WRITE RESULT TO HTML FILE ----')
+    print('---- OPEN ./response.html TO SEE RESPONSE ----')
 
 def request_directory():
     """
@@ -96,9 +121,10 @@ def send_request(encrypted_message, entry_node):
     relay_socket.connect((host, int(port)))
     payload = encrypted_message
     relay_socket.send(payload)
-    response = relay_socket.recv(819200000)
+    response = relay_socket.recv(81920000)
     relay_socket.close()
     return response
 
 if __name__ == '__main__':
-    main("http://www.google.com")
+  url = sys.argv[1]
+  main(url)

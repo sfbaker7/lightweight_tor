@@ -160,7 +160,7 @@ def decrypt_payload(AES_key, payload):
     localhost_match = re.search(r'localhost:\d{4}', decrypted_payload)
     destination = ''
     message = ''
-    print(decrypted_payload)
+    # print(decrypted_payload)
     if url_match is not None:
         destination = url_match.group()
         message = ''
