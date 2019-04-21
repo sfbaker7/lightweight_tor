@@ -5,6 +5,7 @@ import socket
 import json
 import base64
 import crypt
+import logger
 import requests
 
 DIRECTORY_PORT = 3001
@@ -21,34 +22,32 @@ def listen():
     serversocket.listen(5)
     next_ip = None
     while True:
-        print('CURRENT RELAY NODE: ' + str(RELAY_PORT))
-        print('RECIEVING PORT:' + str(RELAY_PORT) + ' FORWARDING PORT:' + str(FORWARDING_PORT))
+        logger.log('CURRENT RELAY NODE: ' + str(RELAY_PORT))
+        logger.log('RECIEVING PORT:' + str(RELAY_PORT) + ' FORWARDING PORT:' + str(FORWARDING_PORT))
 
         clientsocket, address = serversocket.accept()
         payload = clientsocket.recv(81920000)
         previous_ip = parse_address(address)
-        print('received payload from: ', previous_ip)
-        print('Payload (trunc): ', payload[:100])
-        print('\n')
-        print('---- BEGIN DECRYPTION OF RECEIVED PAYLOAD ----')
+        logger.log('received payload from: ', previous_ip)
+        logger.log('Payload (trunc): ', payload[:100], newline=True)
+        logger.header('---- BEGIN DECRYPTION OF RECEIVED PAYLOAD ----')
         next_ip, message = deserialize_payload(payload)
 
-        print('begin forwarding payload to next node...')
+        logger.log('begin forwarding payload to next node...')
         response = forward_payload(next_ip, message)
         if response is not None:
             '''
             Case: send to previous_ip
             '''
             #encrypt layer
-            print('Response returned from: ' + next_ip)
-            print('\n')
-            print('---- BEGIN ENCRYPTION OF RETURN PAYLOAD ----')
-            print('Payload being encrypted (trunc):', response[:100])    
+            logger.log('Response returned from: ' + next_ip, newline=True)
+            logger.header('---- BEGIN ENCRYPTION OF RETURN PAYLOAD ----')
+            logger.log('Payload being encrypted (trunc):', response[:100])
 
-            print('aes_key used:', decrypted_aes_key)
+            logger.log('aes_key used:', decrypted_aes_key)
             encrypted_payload = serialize_payload(response)
 
-            print('send payload to previous node: ', previous_ip)
+            logger.log('send payload to previous node: ', previous_ip)
             clientsocket.sendall(encrypted_payload)
 
         clientsocket.close()
@@ -60,16 +59,14 @@ def deserialize_payload(payload):
     :param: bytestring payload: encrypted_aes_key, encrypted_message
     '''
     decoded_payload = base64.b64decode(payload)
-    print('Decoded Payload (rsa_encrypt(aes_key) + aes_encrypt(payload)):', decoded_payload)
-    print('\n')
+    logger.log('Decoded Payload (rsa_encrypt(aes_key) + aes_encrypt(payload)):', decoded_payload, newline=True)
     encrypted_aes_key, encrypted_message = split_bytes(HASH_DELIMITER, decoded_payload)
     global decrypted_aes_key
     decrypted_aes_key = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
     next_ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
-    print('Decrypted AES Key:', decrypted_aes_key)
-    print('Decrypted Payload:', next_ip, message)
-    print('---- END DECRYPTION OF RECEIVED PAYLOD ----')
-    print('\n')
+    logger.log('Decrypted AES Key:', decrypted_aes_key)
+    logger.log('Decrypted Payload:', next_ip, message)
+    logger.header('---- END DECRYPTION OF RECEIVED PAYLOD ----', newline=True)
     return next_ip, message
 
 def serialize_payload(message):
@@ -81,14 +78,14 @@ def serialize_payload(message):
 
 def forward_payload(next_ip, message):
     if is_exit_node(message):
-        print('EXIT NODE FOUND')
-        print('begin request to destination')
+        logger.log('EXIT NODE FOUND')
+        logger.log('begin request to destination')
         req = requests.get(next_ip)
         return req.text.encode()
 
     else:
-        print('RELAY NODE FOUND')
-        print('next relay node is: ' + next_ip)
+        logger.log('RELAY NODE FOUND')
+        logger.log('next relay node is: ' + next_ip)
         payload = message.encode()
         host, port = next_ip.split(':')
 
