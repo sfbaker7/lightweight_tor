@@ -5,6 +5,7 @@ import socket
 import json
 import crypt
 import base64
+import struct
 from random import shuffle
 from cryptography.fernet import Fernet
 
@@ -55,6 +56,7 @@ def request_directory():
     get list of relay nodes from directory
     """
     s = socket.socket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
     payload = s.recv(8192).decode()  # payload is received as bytes, decode to get str type
     # print(payload)
@@ -102,7 +104,7 @@ def decrypt_payload(payload, circuit):
     """
     message = payload
     for i in range(len(circuit)):
-        ip = circuit[i][0]
+        # ip = circuit[i][0]
         aes_key = circuit[i][1]
 
         decoded_message = base64.b64decode(message)
@@ -117,11 +119,19 @@ def send_request(encrypted_message, entry_node):
     # print(entry_node)
     host, port = entry_node.split(':')
     relay_socket = socket.socket()
+    relay_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     relay_socket.bind(('localhost', CLIENT_PORT))
     relay_socket.connect((host, int(port)))
-    payload = encrypted_message
-    relay_socket.send(payload)
-    response = relay_socket.recv(81920000)
+    packet_size = struct.pack('>i', len(encrypted_message))
+    payload = packet_size + encrypted_message
+    relay_socket.sendall(payload)
+    response = b""
+    while True:
+      incomingBuffer = relay_socket.recv(8192)
+      print('buffer length', len(incomingBuffer), incomingBuffer)
+      if not incomingBuffer: break
+      response += incomingBuffer
+    # response = relay_socket.recv(81920000)
     relay_socket.close()
     return response
 
