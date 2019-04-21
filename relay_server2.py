@@ -1,58 +1,72 @@
 #!/usr/bin/env python3
 
-import sys
+# python modules
 import socket
 import json
 import base64
-import crypt
 import requests
+import traceback
+
+# lightweight_tor modules
+import crypt
+import network
 
 DIRECTORY_PORT = 3001
 RELAY_PORT = 5003
 FORWARDING_PORT = 7003
 HASH_DELIMITER = b'###'
+DECRYPTED_AES_KEY = ''
+PRIVATE_KEY = ''
 
 def main():
-    listen()
+    # get RSA private key
+    global PRIVATE_KEY
+    PRIVATE_KEY = get_pk()
+    # open socket connection
+    listen()    
 
 def listen():
-    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serversocket.bind(('localhost', RELAY_PORT))
-    serversocket.listen(5)
+  try:
+    serversocket = network.start_server('localhost', RELAY_PORT)
     next_ip = None
     while True:
-        print('CURRENT RELAY NODE: ' + str(RELAY_PORT))
-        print('RECIEVING PORT:' + str(RELAY_PORT) + ' FORWARDING PORT:' + str(FORWARDING_PORT))
+      print('CURRENT RELAY NODE: ' + str(RELAY_PORT))
+      print('RECIEVING PORT:' + str(RELAY_PORT) + ' FORWARDING PORT:' + str(FORWARDING_PORT))
 
-        clientsocket, address = serversocket.accept()
-        payload = clientsocket.recv(81920000)
-        previous_ip = parse_address(address)
-        print('received payload from: ', previous_ip)
-        print('Payload (trunc): ', payload[:100])
+      # keep socket connection open and concatenate buffers
+      clientsocket, address = serversocket.accept()
+      payload = network.recv_by_size(clientsocket)
+
+      # get previous ip address
+      previous_ip = parse_address(address)
+      print('received payload from: ', previous_ip)
+      print('Payload (trunc): ', payload[:100])
+      print('\n')
+      
+      # decrypt payload
+      print('---- BEGIN DECRYPTION OF RECEIVED PAYLOAD ----')
+      next_ip, message = deserialize_payload(payload)
+
+      print('begin forwarding payload to next node...')
+      response = forward_payload(next_ip, message)
+      if response is not None:
+        '''
+        Case: send to previous_ip
+        '''
+        #encrypt layer
+        print('Response returned from: ' + next_ip)
         print('\n')
-        print('---- BEGIN DECRYPTION OF RECEIVED PAYLOAD ----')
-        next_ip, message = deserialize_payload(payload)
+        print('---- BEGIN ENCRYPTION OF RETURN PAYLOAD ----')
+        print('Payload being encrypted (trunc):', response[:100])    
+        print('aes_key used:', DECRYPTED_AES_KEY)
+        encrypted_payload = network.prepend_length(serialize_payload(response))
+        print('send payload to previous node: ', previous_ip)
+        clientsocket.sendall(encrypted_payload)
 
-        print('begin forwarding payload to next node...')
-        response = forward_payload(next_ip, message)
-        if response is not None:
-            '''
-            Case: send to previous_ip
-            '''
-            #encrypt layer
-            print('Response returned from: ' + next_ip)
-            print('\n')
-            print('---- BEGIN ENCRYPTION OF RETURN PAYLOAD ----')
-            print('Payload being encrypted (trunc):', response[:100])    
-
-            print('aes_key used:', decrypted_aes_key)
-            encrypted_payload = serialize_payload(response)
-
-            print('send payload to previous node: ', previous_ip)
-            clientsocket.sendall(encrypted_payload)
-
-        clientsocket.close()
-
+      clientsocket.close()
+  except Exception:
+    print("Unable to connect to server")
+    print(traceback.format_exc())         
     return
 
 def deserialize_payload(payload):
@@ -63,10 +77,10 @@ def deserialize_payload(payload):
     print('Decoded Payload (rsa_encrypt(aes_key) + aes_encrypt(payload)):', decoded_payload)
     print('\n')
     encrypted_aes_key, encrypted_message = split_bytes(HASH_DELIMITER, decoded_payload)
-    global decrypted_aes_key
-    decrypted_aes_key = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
-    next_ip, message = crypt.decrypt_payload(decrypted_aes_key, encrypted_message) # decrypted_message = encypted_payload + next_ip
-    print('Decrypted AES Key:', decrypted_aes_key)
+    global DECRYPTED_AES_KEY
+    DECRYPTED_AES_KEY = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
+    next_ip, message = crypt.decrypt_payload(DECRYPTED_AES_KEY, encrypted_message) # decrypted_message = encypted_payload + next_ip
+    print('Decrypted AES Key:', DECRYPTED_AES_KEY)
     print('Decrypted Payload:', next_ip, message)
     print('---- END DECRYPTION OF RECEIVED PAYLOD ----')
     print('\n')
@@ -76,7 +90,7 @@ def serialize_payload(message):
     if not isinstance(message, bytes):
         raise Exception('Message should be of byte format, not ' , type(message))
 
-    aes_encrypted_message = crypt.encrypt_aes(decrypted_aes_key, message)
+    aes_encrypted_message = crypt.encrypt_aes(DECRYPTED_AES_KEY, message)
     return base64.b64encode(aes_encrypted_message)
 
 def forward_payload(next_ip, message):
@@ -89,14 +103,12 @@ def forward_payload(next_ip, message):
     else:
         print('RELAY NODE FOUND')
         print('next relay node is: ' + next_ip)
-        payload = message.encode()
+        message = message.encode()
         host, port = next_ip.split(':')
-
-        relay_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        relay_socket.bind(('localhost', FORWARDING_PORT))
-        relay_socket.connect((host, int(port)))
-        relay_socket.send(payload)
-        response = relay_socket.recv(81920000)
+        relay_socket = network.connect_server('localhost', FORWARDING_PORT, host, port)
+        payload = network.prepend_length(message)
+        relay_socket.sendall(payload)
+        response = network.recv_by_size(relay_socket)
 
         relay_socket.close()
         return response
@@ -118,7 +130,7 @@ def split_bytes(delimiter, bytestring):
 
     return encrypted_aes_key, encrypted_message
 
-def get_pk(): #DELETE LATER, private key lookup from directory
+def get_pk(): # private key lookup from directory
     directory_socket = socket.socket()
     directory_socket.connect(('localhost', DIRECTORY_PORT))
     payload = directory_socket.recv(8192) # payload is received as bytes, decode to get as string
@@ -127,9 +139,6 @@ def get_pk(): #DELETE LATER, private key lookup from directory
     private_key = base64.b64decode(relay_nodes['localhost:' + str(RELAY_PORT)][0])
 
     return private_key
-
-PRIVATE_KEY = get_pk()
-
 
 if __name__ == '__main__':
     main()
