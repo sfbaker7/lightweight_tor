@@ -6,6 +6,7 @@ import json
 import crypt
 import base64
 import struct
+import logger
 from random import shuffle
 from cryptography.fernet import Fernet
 
@@ -16,40 +17,35 @@ HASH_DELIMITER = b'###'
 AES_KEY = crypt.gen_aes_key()
 
 def main(message):
-    print('---- REQUEST RELAY NODES FROM DIRECTORY ----')  
+    logger.header('---- REQUEST RELAY NODES FROM DIRECTORY ----')
     relay_nodes = request_directory()
-    print('RELAY NODES: ', relay_nodes)
-    print('\n')
-    print('---- GENERATE CIRCUIT FOR ONION ROUTING ----')
+    logger.log('RELAY NODES: ', relay_nodes, True)
+    logger.header('---- GENERATE CIRCUIT FOR ONION ROUTING ----')
     circuit = generate_circuit(relay_nodes)
-    print('CIRCUIT IS: ', circuit)
+    logger.log('CIRCUIT IS: ', circuit)
     circuit_copy = list(circuit)
     entry_node = circuit[0][0]
-    print('ENTRY NODE IS: ', entry_node)
-    print('\n')
-    print('---- BEGIN ENCRYPTION PROCESS TO WRAP ONION ----')
+    logger.log('ENTRY NODE IS: ', entry_node, True)
+    logger.header('---- BEGIN ENCRYPTION PROCESS TO WRAP ONION ----')
     encrypted_message = encrypt_payload(message, circuit, relay_nodes)
-    print('---- END ENCRYPTION PROCESS TO WRAP ONION ----')
-    print('ENCRYPTED MESSAGE: ', encrypted_message)
-    print('\n')
-    print('---- SEND REQUEST TO ENTRY NODE ----')
+    logger.header('---- END ENCRYPTION PROCESS TO WRAP ONION ----')
+    logger.log('ENCRYPTED MESSAGE: ', encrypted_message, True)
+    logger.header('---- SEND REQUEST TO ENTRY NODE ----')
     response = send_request(encrypted_message, entry_node)
-    print('...onion routing via relay nodes')
-    print('...onion routing via relay nodes')
-    print('...onion routing via relay nodes')
-    print('\n')
-    print('...received response from destination')
+    logger.log('...onion routing via relay nodes', 3, True)
+    logger.log('...received response from destination')
+    logger.log('...received response from destination')
     byteStream = decrypt_payload(response, circuit_copy)
     result = byteStream.decode()
-    print('---- DECODED RESPONSE FROM DESTINATION ----\n')
-    print(result)
+    logger.header('---- DECODED RESPONSE FROM DESTINATION ----\n')
+    logger.log('', result)
     # write result to html file
-    print('---- BEGIN WRITE RESULT TO HTML FILE ----')
+    logger.header('---- BEGIN WRITE RESULT TO HTML FILE ----')
     f = open('response.html','w')
     f.write(result)
     f.close()
-    print('---- END WRITE RESULT TO HTML FILE ----')
-    print('---- OPEN ./response.html TO SEE RESPONSE ----')
+    logger.header('---- END WRITE RESULT TO HTML FILE ----')
+    logger.header('---- OPEN ./response.html TO SEE RESPONSE ----')
 
 def request_directory():
     """
@@ -72,11 +68,14 @@ def generate_circuit(nodes):
     return circuit
 
 def serialize_payload(aes_key, message):
+    '''
+    encode payload for transmission
+    '''
     return base64.b64encode(aes_key + HASH_DELIMITER + message)
 
 def encrypt_payload(message, circuit, relay_nodes):
     '''
-    encrypt each layer of the request encrypt(encrypt(M + next_node) + next node)
+    encrypt each layer of the request rsa_encrypt(AES_key) + aes_encrypt(M + next)
     '''
     node_stack = circuit
     next = message # final plaintext will be the original user request
@@ -97,9 +96,9 @@ def encrypt_payload(message, circuit, relay_nodes):
 
 
 def decrypt_payload(payload, circuit):
-    """
+    '''
     decrypt each layer of the request
-    """
+    '''
     message = payload
     for i in range(len(circuit)):
         aes_key = circuit[i][1]
@@ -110,9 +109,9 @@ def decrypt_payload(payload, circuit):
     return message
 
 def send_request(encrypted_message, entry_node):
-    """
+    '''
     send request to first relay node
-    """
+    '''
     host, port = entry_node.split(':')
     relay_socket = socket.socket()
     relay_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -132,5 +131,7 @@ def send_request(encrypted_message, entry_node):
     return response
 
 if __name__ == '__main__':
+  if len(sys.argv) < 2:
+      raise Exception('No URL entered')
   url = sys.argv[1]
   main(url)

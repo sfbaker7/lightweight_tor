@@ -4,6 +4,7 @@
 import socket
 import json
 import base64
+import logger
 import requests
 import traceback
 
@@ -30,60 +31,53 @@ def listen():
     serversocket = network.start_server('localhost', RELAY_PORT)
     next_ip = None
     while True:
-      print('CURRENT RELAY NODE: ' + str(RELAY_PORT))
-      print('RECIEVING PORT:' + str(RELAY_PORT) + ' FORWARDING PORT:' + str(FORWARDING_PORT))
+        logger.log('CURRENT RELAY NODE: ' + str(RELAY_PORT))
+        logger.log('RECIEVING PORT:' + str(RELAY_PORT) + ' FORWARDING PORT:' + str(FORWARDING_PORT))
 
-      # keep socket connection open and concatenate buffers
-      clientsocket, address = serversocket.accept()
-      payload = network.recv_by_size(clientsocket)
+        clientsocket, address = serversocket.accept()
+        payload = network.recv_by_size(clientsocket)
+        previous_ip = parse_address(address)
+        logger.log('received payload from: ', previous_ip)
+        logger.log('Payload (trunc): ', payload[:100], newline=True)
+        logger.header('---- BEGIN DECRYPTION OF RECEIVED PAYLOAD ----')
+        next_ip, message = deserialize_payload(payload)
 
-      # get previous ip address
-      previous_ip = parse_address(address)
-      print('received payload from: ', previous_ip)
-      print('Payload (trunc): ', payload[:100])
-      print('\n')
-      
-      # decrypt payload
-      print('---- BEGIN DECRYPTION OF RECEIVED PAYLOAD ----')
-      next_ip, message = deserialize_payload(payload)
+        logger.log('begin forwarding payload to next node...')
+        response = forward_payload(next_ip, message)
+        if response is not None:
+            '''
+            Case: send to previous_ip
+            '''
+            # encrypt layer
+            logger.log('Response returned from: ' + next_ip, newline=True)
+            logger.header('---- BEGIN ENCRYPTION OF RETURN PAYLOAD ----')
+            logger.log('Payload being encrypted (trunc):', response[:100])
 
-      print('begin forwarding payload to next node...')
-      response = forward_payload(next_ip, message)
-      if response is not None:
-        '''
-        Case: send to previous_ip
-        '''
-        #encrypt layer
-        print('Response returned from: ' + next_ip)
-        print('\n')
-        print('---- BEGIN ENCRYPTION OF RETURN PAYLOAD ----')
-        print('Payload being encrypted (trunc):', response[:100])    
-        print('aes_key used:', DECRYPTED_AES_KEY)
-        encrypted_payload = network.prepend_length(serialize_payload(response))
-        print('send payload to previous node: ', previous_ip)
-        clientsocket.sendall(encrypted_payload)
+            logger.log('aes_key used:', DECRYPTED_AES_KEY)
+            encrypted_payload = network.prepend_length(serialize_payload(response))
 
-      clientsocket.close()
+            logger.log('send payload to previous node: ', previous_ip)
+            clientsocket.sendall(encrypted_payload)
+
+        clientsocket.close()
   except Exception:
-    print("Unable to connect to server")
-    print(traceback.format_exc())         
-    return
+    logger.exception("Unable to connect to server")
+    logger.error(traceback.format_exc()) 
+  return
 
 def deserialize_payload(payload):
     '''
     :param: bytestring payload: encrypted_aes_key, encrypted_message
     '''
     decoded_payload = base64.b64decode(payload)
-    print('Decoded Payload (rsa_encrypt(aes_key) + aes_encrypt(payload)):', decoded_payload)
-    print('\n')
+    logger.log('Decoded Payload (rsa_encrypt(aes_key) + aes_encrypt(payload)):', decoded_payload, newline=True)
     encrypted_aes_key, encrypted_message = split_bytes(HASH_DELIMITER, decoded_payload)
     global DECRYPTED_AES_KEY
     DECRYPTED_AES_KEY = crypt.decrypt_rsa(PRIVATE_KEY, encrypted_aes_key)
     next_ip, message = crypt.decrypt_payload(DECRYPTED_AES_KEY, encrypted_message) # decrypted_message = encypted_payload + next_ip
-    print('Decrypted AES Key:', DECRYPTED_AES_KEY)
-    print('Decrypted Payload:', next_ip, message)
-    print('---- END DECRYPTION OF RECEIVED PAYLOD ----')
-    print('\n')
+    logger.log('Decrypted AES Key:', DECRYPTED_AES_KEY)
+    logger.log('Decrypted Payload:', next_ip, message)
+    logger.header('---- END DECRYPTION OF RECEIVED PAYLOD ----', newline=True)
     return next_ip, message
 
 def serialize_payload(message):
@@ -95,14 +89,14 @@ def serialize_payload(message):
 
 def forward_payload(next_ip, message):
     if is_exit_node(message):
-        print('EXIT NODE FOUND')
-        print('begin request to destination')
+        logger.log('EXIT NODE FOUND')
+        logger.log('begin request to destination')
         req = requests.get(next_ip)
         return req.text.encode()
 
     else:
-        print('RELAY NODE FOUND')
-        print('next relay node is: ' + next_ip)
+        logger.log('RELAY NODE FOUND')
+        logger.log('next relay node is: ' + next_ip)
         message = message.encode()
         host, port = next_ip.split(':')
         relay_socket = network.connect_server('localhost', FORWARDING_PORT, host, port)
