@@ -59,7 +59,6 @@ def request_directory():
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
     payload = s.recv(8192).decode()  # payload is received as bytes, decode to get str type
-    # print(payload)
     s.close()
     relay_nodes = json.loads(payload)
     return relay_nodes
@@ -90,8 +89,7 @@ def encrypt_payload(message, circuit, relay_nodes):
         if (isinstance(payload, tuple)):
           encrypted_aes_key, encrypted_payload = payload
           payload = serialize_payload(encrypted_aes_key, encrypted_payload)
-
-        # payload encrypt(public_key, (payload + next.encode())) #potential for encoding inconsistancy
+        # encrypt payload
         payload = crypt.encrypt(curr_aes_key_instance, public_key, (payload + next.encode()))
         next = curr_node_addr
 
@@ -104,7 +102,6 @@ def decrypt_payload(payload, circuit):
     """
     message = payload
     for i in range(len(circuit)):
-        # ip = circuit[i][0]
         aes_key = circuit[i][1]
 
         decoded_message = base64.b64decode(message)
@@ -116,7 +113,6 @@ def send_request(encrypted_message, entry_node):
     """
     send request to first relay node
     """
-    # print(entry_node)
     host, port = entry_node.split(':')
     relay_socket = socket.socket()
     relay_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -131,7 +127,7 @@ def send_request(encrypted_message, entry_node):
       print('buffer length', len(incomingBuffer), incomingBuffer)
       if not incomingBuffer: break
       response += incomingBuffer
-    # response = relay_socket.recv(81920000)
+
     relay_socket.close()
     return response
 
