@@ -4,13 +4,13 @@
 import socket
 import json
 import base64
-import logger
 import requests
 import traceback
 
 # lightweight_tor modules
 import crypt
 import network
+import logger
 
 DIRECTORY_PORT = 3001
 RELAY_PORT = 5001

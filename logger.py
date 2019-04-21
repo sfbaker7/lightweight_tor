@@ -15,13 +15,13 @@ def header(message, newline=False):
         print('\n')
 
 def log(message, variable='', newline=False, freq=1, ):
-    for i in range(freq+1):
+    for i in range(freq):
         print(message, variable)
     if newline:
         print('\n')
 
 def error(message, variable='', newline=False, freq=1):
-    for i in range(freq+1):
-        print(bcolors.WARNING + message + bcolors.ENDC variable)
+    for i in range(freq):
+        print(bcolors.WARNING + message + bcolors.ENDC, variable)
     if newline:
         print('\n')
