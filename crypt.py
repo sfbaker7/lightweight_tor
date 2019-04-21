@@ -10,41 +10,6 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 import ast
 
-def main():
-    key = gen_aes_key()
-    plaintext_bytes = b'Hi, Im Jeff'
-    token = encrypt_aes(key, plaintext_bytes)
-    decypted_msg = decrypt_aes(key, token)
-    private, pub = gen_rsa_keypair()
-
-    encryptedKey = encrypt_rsa(pub,key)
-    decryptedKey = decrypt_rsa(private,encryptedKey)
-    print("ARE THE KEYS THE SAME")
-    print(decryptedKey == key)
-    message = b'Im RSA'
-    cipher = encrypt_rsa(pub, message)
-    plaintext = decrypt_rsa(private, cipher)
-
-    print('key', key)
-    print('plaintext_bytes', type(plaintext_bytes))
-    print('token', token)
-    print ('decypted_msg', decypted_msg)
-    print('-----RSA----')
-    print(private, pub)
-    print('message', message)
-    print('cipher', cipher)
-    print('plaintext', plaintext)
-
-    payload = b'dsafdsafdsafads  asdas  192.0.2.2'
-    encryptedpayload = encrypt_aes(key, payload)
-    IP,message = decrypt_payload(key,encryptedpayload)
-    print("IP ADDRESS:")
-    print(IP)
-    print("MESSAGE:")
-    print(message)
-
-
-
 def gen_aes_key():
     '''
     Generates an AES key using the Fernet recipe layer
@@ -64,10 +29,16 @@ def encrypt_aes(key, plaintext_bytes):
     return token
 
 def decrypt_aes(key, token):
+    '''
+    :rtype: bytes
+    '''
     plaintext_bytes = Fernet(key).decrypt(token)
     return plaintext_bytes
 
 def gen_rsa_keypair():
+    '''
+    :rtype: keypair objects
+    '''
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=1024,
@@ -78,7 +49,7 @@ def gen_rsa_keypair():
 
 def encrypt_rsa(public_key, message):
     '''
-    :rtype:
+    :rtype: str
     '''
     ciphertext = public_key.encrypt(
     message,
@@ -113,6 +84,10 @@ def decrypt_rsa(private_key, ciphertext):
     return plaintext
 
 def get_pem_format(private_key, public_key):
+    '''
+    :ptype: private_key object, pubic_key object
+    :rtype: private_key str, pubic_key str
+    '''
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -174,7 +149,3 @@ def decrypt_payload(AES_key, payload):
         raise Exception('No match was found')
 
     return destination, message
-
-
-if __name__ == '__main__':
-    main()
