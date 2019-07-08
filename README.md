@@ -6,6 +6,12 @@ It is set up so that relay nodes are run on local host at different port numbers
 ## Background
 TOR, an open source and free software designed to provide online anonymity. TOR’s name is derived from “The Onion Routing”.  It uses a voluntary network of several thousand voluntary relay server nodes in order to shield users from network surveillance and traffic analysis.
 
+ ## Authors                                                               
+ This project was created by:                                             
+  - [@snggeng](https://github.com/snggeng)                                 
+  - [@sfbaker7](https://github.com/sfbaker7)                               
+  - [@jeffery300](https://github.com/jeffery300)  
+
 ## Onion Routing
 An onion has many layers, just like how an onion network has multiple layers of encryption surrounding messages. The client will encapsulate the message it is trying to send to the destination server with as many layers of encryption as there are intermediary nodes. This process is also called a stream cipher:
 
